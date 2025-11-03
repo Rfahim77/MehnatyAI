@@ -23,6 +23,7 @@ A conversational AI career assistant designed specifically for job seekers in Sa
 - ✅ **PDF Export**: Resume export using headless Chrome with RTL and Arabic fonts
 - ✅ **Real-time Collaboration**: WebSocket-based collaborative editing for resume sections
 - ✅ **KSA Market Data**: Salary ranges, top employers, industry trends for 8 common roles
+- ✅ **Language Switching**: Toggle between Arabic and English with automatic RTL/LTR support
 
 ### Technical Features
 - **Conversation Memory**: PostgreSQL-backed chat history with full context persistence
@@ -33,6 +34,7 @@ A conversational AI career assistant designed specifically for job seekers in Sa
 - **Export Formats**: DOCX and PDF with RTL-aware document generation
 - **Multi-tone Support**: Professional Arabic (default) + light Najdi dialect (on request)
 - **WebSocket Collaboration**: Real-time resume editing with multiple users
+- **Language Switching**: Arabic/English toggle with localStorage persistence and automatic RTL/LTR direction updates
 
 ## Architecture
 
@@ -52,6 +54,9 @@ Key Components:
 - `ChatInput.tsx` - Message input with file upload
 - `OutputCard.tsx` - Generated content cards (resumes, plans, etc.)
 - `FileUploadDialog.tsx` - Multi-format file upload
+- `LanguageSwitcher.tsx` - Language toggle component (Arabic/English)
+- `contexts/LanguageContext.tsx` - Language state management and translation provider
+- `lib/translations.ts` - Translation keys for Arabic and English
 - `hooks/useCollaboration.ts` - WebSocket collaboration hook
 
 ### Backend (`server/`)
@@ -179,6 +184,14 @@ E2E testing confirmed:
    - Included top employers for each position
    - Added industry trends and growth indicators
    - Ready for integration with career planning features
+
+5. **Language Switching**:
+   - Created translation system with Arabic and English support
+   - Implemented LanguageContext for state management
+   - Added LanguageSwitcher component with dropdown UI
+   - Updated all components to use translation keys
+   - Automatic RTL/LTR direction switching
+   - localStorage persistence for language preference
 
 ## Running the Application
 
