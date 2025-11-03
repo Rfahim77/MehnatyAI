@@ -1,37 +1,58 @@
-import { type User, type InsertUser } from "@shared/schema";
+import { type Session, type Card, type ChatMessage } from "@shared/schema";
 import { randomUUID } from "crypto";
 
-// modify the interface with any CRUD methods
-// you might need
-
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getSession(id: string): Promise<Session | undefined>;
+  createSession(session: Session): Promise<Session>;
+  updateSession(id: string, updates: Partial<Session>): Promise<Session | undefined>;
+  addCardToSession(sessionId: string, card: Card): Promise<void>;
+  addMessageToSession(sessionId: string, message: ChatMessage): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<string, User>;
+  private sessions: Map<string, Session>;
 
   constructor() {
-    this.users = new Map();
+    this.sessions = new Map();
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getSession(id: string): Promise<Session | undefined> {
+    return this.sessions.get(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async createSession(session: Session): Promise<Session> {
+    this.sessions.set(session.id, session);
+    return session;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async updateSession(id: string, updates: Partial<Session>): Promise<Session | undefined> {
+    const session = this.sessions.get(id);
+    if (!session) return undefined;
+
+    const updated = { ...session, ...updates, lastActivity: Date.now() };
+    this.sessions.set(id, updated);
+    return updated;
+  }
+
+  async addCardToSession(sessionId: string, card: Card): Promise<void> {
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      session.cards.push(card);
+      session.lastActivity = Date.now();
+      this.sessions.set(sessionId, session);
+    }
+  }
+
+  async addMessageToSession(sessionId: string, message: ChatMessage): Promise<void> {
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      if (!session.messages) {
+        session.messages = [];
+      }
+      session.messages.push(message);
+      session.lastActivity = Date.now();
+      this.sessions.set(sessionId, session);
+    }
   }
 }
 
