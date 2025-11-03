@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { CollaborativeEditingServer } from "./websocket";
 import multer from "multer";
 import { storage } from "./storage";
 import { callLLMWithRetry, type LLMMessage } from "./llmClient";
@@ -432,6 +433,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Initialize WebSocket server for collaborative editing
+  const wsServer = new CollaborativeEditingServer(httpServer);
+  console.log("[WS] Collaborative editing WebSocket server initialized");
+  
   return httpServer;
 }
 

@@ -194,6 +194,14 @@ export interface KSARole {
   level: "entry" | "junior" | "mid" | "senior";
   responsibilities: string[];
   keywords: string[];
+  salary?: {
+    min: number;
+    max: number;
+    currency: "SAR";
+  };
+  topEmployers?: string[];
+  industryTrends?: string[];
+  growth?: "high" | "medium" | "stable";
 }
 
 export const KSA_COMMON_ROLES: KSARole[] = [
@@ -202,35 +210,88 @@ export const KSA_COMMON_ROLES: KSARole[] = [
     titleEn: "Customer Service Representative",
     level: "entry",
     responsibilities: ["الرد على استفسارات العملاء", "حل المشكلات", "إدارة الشكاوى"],
-    keywords: ["communication", "problem-solving", "CRM"]
+    keywords: ["communication", "problem-solving", "CRM"],
+    salary: { min: 4000, max: 6000, currency: "SAR" },
+    topEmployers: ["أرامكو السعودية", "stc", "موبايلي", "البنك الأهلي التجاري"],
+    industryTrends: ["ارتفاع الطلب على دعم العملاء الرقمي", "تحول نحو خدمة العملاء عبر القنوات المتعددة"],
+    growth: "high"
   },
   {
     titleAr: "إدخال بيانات",
     titleEn: "Data Entry Specialist",
     level: "entry",
     responsibilities: ["إدخال البيانات بدقة", "التحقق من البيانات", "إعداد التقارير"],
-    keywords: ["typing", "accuracy", "Microsoft Excel"]
+    keywords: ["typing", "accuracy", "Microsoft Excel"],
+    salary: { min: 3500, max: 5500, currency: "SAR" },
+    topEmployers: ["الشركات الحكومية", "البنوك", "شركات التأمين"],
+    industryTrends: ["أتمتة العمليات تقلل الطلب", "الحاجة للدقة والتفاصيل"],
+    growth: "stable"
   },
   {
     titleAr: "مساعد إداري",
     titleEn: "Administrative Assistant",
     level: "entry",
     responsibilities: ["تنظيم المواعيد", "إدارة المراسلات", "الدعم الإداري"],
-    keywords: ["organization", "Microsoft Office", "scheduling"]
+    keywords: ["organization", "Microsoft Office", "scheduling"],
+    salary: { min: 4500, max: 7000, currency: "SAR" },
+    topEmployers: ["القطاع الحكومي", "الشركات متعددة الجنسيات", "شركات الاستشارات"],
+    industryTrends: ["طلب مستمر في جميع القطاعات", "مهارات التنظيم الرقمي مطلوبة"],
+    growth: "medium"
   },
   {
     titleAr: "محلل بيانات مبتدئ",
     titleEn: "Junior Data Analyst",
     level: "junior",
     responsibilities: ["تحليل البيانات", "إعداد التقارير", "استخدام SQL"],
-    keywords: ["SQL", "Excel", "Power BI", "data analysis"]
+    keywords: ["SQL", "Excel", "Power BI", "data analysis"],
+    salary: { min: 6000, max: 9000, currency: "SAR" },
+    topEmployers: ["أرامكو", "SABIC", "stc", "البنك السعودي الفرنسي"],
+    industryTrends: ["نمو كبير في الطلب مع رؤية 2030", "تحول رقمي في جميع القطاعات"],
+    growth: "high"
   },
   {
     titleAr: "تسويق رقمي",
     titleEn: "Digital Marketing Associate",
     level: "junior",
     responsibilities: ["إدارة وسائل التواصل الاجتماعي", "الإعلانات الرقمية", "تحليل الأداء"],
-    keywords: ["social media", "Google Ads", "content creation", "analytics"]
+    keywords: ["social media", "Google Ads", "content creation", "analytics"],
+    salary: { min: 5500, max: 8500, currency: "SAR" },
+    topEmployers: ["وكالات التسويق", "الشركات الناشئة", "التجارة الإلكترونية"],
+    industryTrends: ["نمو سريع في التجارة الإلكترونية", "ارتفاع الإنفاق الإعلاني الرقمي"],
+    growth: "high"
+  },
+  {
+    titleAr: "مطور برمجيات",
+    titleEn: "Software Developer",
+    level: "mid",
+    responsibilities: ["تطوير التطبيقات", "كتابة الكود", "حل المشكلات التقنية"],
+    keywords: ["JavaScript", "Python", "React", "Node.js", "Git"],
+    salary: { min: 10000, max: 18000, currency: "SAR" },
+    topEmployers: ["STC", "Careem", "Mrsool", "Jahez", "شركات التقنية الناشئة"],
+    industryTrends: ["طلب متزايد على المطورين", "رؤية 2030 تدعم قطاع التقنية"],
+    growth: "high"
+  },
+  {
+    titleAr: "محاسب",
+    titleEn: "Accountant",
+    level: "mid",
+    responsibilities: ["إعداد القوائم المالية", "التدقيق الداخلي", "إدارة الضرائب"],
+    keywords: ["IFRS", "GAAP", "Excel", "SAP", "accounting"],
+    salary: { min: 7000, max: 12000, currency: "SAR" },
+    topEmployers: ["البنوك", "شركات المحاسبة الكبرى", "القطاع الحكومي"],
+    industryTrends: ["طلب مستمر في جميع الصناعات", "التحول الرقمي في المحاسبة"],
+    growth: "medium"
+  },
+  {
+    titleAr: "مدير مشاريع",
+    titleEn: "Project Manager",
+    level: "senior",
+    responsibilities: ["إدارة المشاريع", "التخطيط الاستراتيجي", "قيادة الفرق"],
+    keywords: ["PMP", "Agile", "Scrum", "leadership", "planning"],
+    salary: { min: 15000, max: 30000, currency: "SAR" },
+    topEmployers: ["أرامكو", "NEOM", "شركات البناء والتشييد", "الاستشارات"],
+    industryTrends: ["مشاريع رؤية 2030 تخلق فرص كبيرة", "طلب على مديري المشاريع المعتمدين"],
+    growth: "high"
   }
 ];
 
