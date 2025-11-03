@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { pgTable, varchar, text, jsonb, timestamp, integer } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
 
 // Resume JSON Schema - strict structure for parsing CVs
 export const ResumeJsonSchema = z.object({
@@ -43,6 +45,7 @@ export interface Session {
   targetJob?: string;
   jdText?: string;
   cards: Card[];
+  messages?: ChatMessage[];
   language: "ar" | "en";
   createdAt: number;
   lastActivity: number;
@@ -230,3 +233,61 @@ export const KSA_COMMON_ROLES: KSARole[] = [
     keywords: ["social media", "Google Ads", "content creation", "analytics"]
   }
 ];
+
+// Database Tables (Drizzle ORM)
+export const sessions = pgTable("sessions", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  resumeJson: jsonb("resume_json").$type<ResumeJson>(),
+  tone: varchar("tone", { length: 50 }),
+  targetJob: varchar("target_job", { length: 255 }),
+  jdText: text("jd_text"),
+  language: varchar("language", { length: 2 }).notNull().default("ar"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  lastActivity: timestamp("last_activity").notNull().defaultNow()
+});
+
+export const messages = pgTable("messages", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  sessionId: varchar("session_id", { length: 255 }).notNull().references(() => sessions.id, { onDelete: "cascade" }),
+  role: varchar("role", { length: 20 }).notNull(),
+  content: text("content").notNull(),
+  timestamp: timestamp("timestamp").notNull().defaultNow()
+});
+
+export const cards = pgTable("cards", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  sessionId: varchar("session_id", { length: 255 }).notNull().references(() => sessions.id, { onDelete: "cascade" }),
+  messageId: varchar("message_id", { length: 255 }).references(() => messages.id, { onDelete: "cascade" }),
+  type: varchar("type", { length: 50 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow()
+});
+
+export const savedResumes = pgTable("saved_resumes", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  sessionId: varchar("session_id", { length: 255 }).notNull().references(() => sessions.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  resumeJson: jsonb("resume_json").notNull().$type<ResumeJson>(),
+  version: integer("version").notNull().default(1),
+  targetRole: varchar("target_role", { length: 255 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
+
+// Insert schemas
+export const insertSessionSchema = createInsertSchema(sessions).omit({ createdAt: true, lastActivity: true });
+export const insertMessageSchema = createInsertSchema(messages).omit({ timestamp: true });
+export const insertCardSchema = createInsertSchema(cards).omit({ createdAt: true });
+export const insertSavedResumeSchema = createInsertSchema(savedResumes).omit({ createdAt: true, updatedAt: true });
+
+// Types
+export type InsertSession = z.infer<typeof insertSessionSchema>;
+export type SelectSession = typeof sessions.$inferSelect;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type SelectMessage = typeof messages.$inferSelect;
+export type InsertCard = z.infer<typeof insertCardSchema>;
+export type SelectCard = typeof cards.$inferSelect;
+export type InsertSavedResume = z.infer<typeof insertSavedResumeSchema>;
+export type SelectSavedResume = typeof savedResumes.$inferSelect;
