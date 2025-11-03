@@ -4,7 +4,9 @@ import { MessageBubble } from "@/components/MessageBubble";
 import { OutputCard } from "@/components/OutputCard";
 import { ChatInput } from "@/components/ChatInput";
 import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { RotateCcw } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ChatInterfaceProps {
   messages: ChatMsg[];
@@ -23,6 +25,7 @@ export function ChatInterface({
   onClearSession,
   sessionId,
 }: ChatInterfaceProps) {
+  const { t } = useLanguage();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -40,21 +43,24 @@ export function ChatInterface({
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-foreground" data-testid="header-title">
-              المساعد المهني
+              {t("appTitle")}
             </h1>
             <p className="text-sm text-muted-foreground" data-testid="header-subtitle">
-              مساعدك الذكي للتوظيف
+              {t("appSubtitle")}
             </p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClearSession}
-            data-testid="button-clear-session"
-            title="بدء محادثة جديدة"
-          >
-            <RotateCcw className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClearSession}
+              data-testid="button-clear-session"
+              title={t("chat.newChat")}
+            >
+              <RotateCcw className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -65,10 +71,10 @@ export function ChatInterface({
             <div className="flex flex-col items-center justify-center py-16 text-center" data-testid="empty-state">
               <div className="text-6xl mb-4">💼</div>
               <h2 className="text-2xl font-semibold text-foreground mb-2">
-                ابدأ المحادثة
+                {t("chat.emptyTitle")}
               </h2>
               <p className="text-muted-foreground max-w-md">
-                اكتب رسالتك أدناه أو اختر أحد المسارات من الصفحة الرئيسية
+                {t("chat.emptyDescription")}
               </p>
             </div>
           )}
@@ -95,7 +101,7 @@ export function ChatInterface({
                     <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
                     <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
                   </div>
-                  <span className="text-sm text-muted-foreground">جارٍ التفكير...</span>
+                  <span className="text-sm text-muted-foreground">{t("chat.typing")}</span>
                 </div>
               </div>
             </div>

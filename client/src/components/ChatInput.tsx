@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Upload } from "lucide-react";
 import { FileUploadDialog } from "@/components/FileUploadDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -11,6 +12,7 @@ interface ChatInputProps {
 }
 
 export function ChatInput({ onSendMessage, isLoading, sessionId }: ChatInputProps) {
+  const { t, dir } = useLanguage();
   const [message, setMessage] = useState("");
   const [showUpload, setShowUpload] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -48,7 +50,7 @@ export function ChatInput({ onSendMessage, isLoading, sessionId }: ChatInputProp
           onClick={() => setShowUpload(true)}
           disabled={isLoading}
           data-testid="button-upload"
-          title="رفع ملف"
+          title={t("chat.uploadFile")}
           className="flex-shrink-0"
         >
           <Upload className="w-5 h-5" />
@@ -60,11 +62,11 @@ export function ChatInput({ onSendMessage, isLoading, sessionId }: ChatInputProp
             value={message}
             onChange={handleInput}
             onKeyDown={handleKeyDown}
-            placeholder="اكتب رسالتك هنا..."
+            placeholder={t("chat.inputPlaceholder")}
             className="resize-none min-h-[44px] max-h-[120px] pr-4 pl-12 rounded-3xl border-input"
             disabled={isLoading}
             data-testid="input-message"
-            dir="rtl"
+            dir={dir}
           />
         </div>
 
@@ -74,7 +76,7 @@ export function ChatInput({ onSendMessage, isLoading, sessionId }: ChatInputProp
           size="icon"
           className="flex-shrink-0"
           data-testid="button-send"
-          title="إرسال"
+          title={t("chat.sendButton")}
         >
           <Send className="w-5 h-5" />
         </Button>

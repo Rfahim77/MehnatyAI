@@ -3,8 +3,10 @@ import { OptionCards } from "@/components/OptionCards";
 import { ChatInterface } from "@/components/ChatInterface";
 import { type ChatMessage, type Card, type ChatRequest } from "@shared/schema";
 import { v4 as uuidv4 } from "uuid";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Home() {
+  const { t, dir } = useLanguage();
   const [sessionId, setSessionId] = useState<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
@@ -67,7 +69,7 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error("فشل الاتصال بالخادم");
+        throw new Error(t("chat.errorMessage"));
       }
 
       const data = await response.json();
@@ -90,7 +92,7 @@ export default function Home() {
       const errorMessage: ChatMessage = {
         id: uuidv4(),
         role: "assistant",
-        content: "عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.",
+        content: t("chat.errorMessage"),
         timestamp: Date.now(),
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -115,16 +117,16 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-screen bg-background" dir={dir}>
       {showOptions && messages.length === 0 ? (
         <div className="flex flex-col items-center justify-center min-h-screen p-4">
           <div className="w-full max-w-7xl mx-auto">
             <header className="text-center mb-12">
               <h1 className="text-4xl font-bold text-foreground mb-4">
-                مرحباً! كيف تحب نبدأ؟
+                {t("appTitle")}
               </h1>
               <p className="text-lg text-muted-foreground">
-                مساعدك المهني الذكي لبناء مسيرتك المهنية في السعودية
+                {t("appSubtitle")}
               </p>
             </header>
             <OptionCards onOptionClick={handleOptionClick} />
