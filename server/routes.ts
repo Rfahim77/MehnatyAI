@@ -11,6 +11,7 @@ import {
   recommendPathKsa,
   scoreVsJD,
   exportDocx,
+  exportPdf,
 } from "./tools";
 import {
   type ChatRequest,
@@ -414,14 +415,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (format === "pdf") {
-        return res.status(501).json({ error: "تصدير PDF غير متوفر حالياً" });
+        const buffer = await exportPdf(markdown, rtl);
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}.pdf"`);
+        res.send(buffer);
+      } else {
+        const buffer = await exportDocx(markdown, rtl);
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}.docx"`);
+        res.send(buffer);
       }
-
-      const buffer = await exportDocx(markdown, rtl);
-
-      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-      res.setHeader("Content-Disposition", `attachment; filename="${filename}.docx"`);
-      res.send(buffer);
     } catch (error) {
       console.error("Export error:", error);
       res.status(500).json({ error: "فشل تصدير الملف" });

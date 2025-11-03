@@ -5,6 +5,7 @@ import Tesseract from "tesseract.js";
 import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } from "docx";
 import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
+import puppeteer from "puppeteer";
 import { callLLMWithRetry } from "./llmClient";
 import {
   getParseResumePrompt,
@@ -229,5 +230,101 @@ export async function exportDocx(markdown: string, rtl: boolean = true): Promise
   } catch (error) {
     console.error("Export DOCX error:", error);
     throw new Error("فشل تصدير الملف");
+  }
+}
+
+export async function exportPdf(markdown: string, rtl: boolean = true): Promise<Buffer> {
+  let browser;
+  try {
+    const html = marked(markdown) as string;
+    const cleanHtml = sanitizeHtml(html, {
+      allowedTags: ["h1", "h2", "h3", "h4", "p", "ul", "ol", "li", "strong", "em", "br"],
+    });
+
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html ${rtl ? 'dir="rtl" lang="ar"' : ''}>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600&display=swap');
+          
+          body {
+            font-family: 'IBM Plex Sans Arabic', 'Arial', sans-serif;
+            direction: ${rtl ? 'rtl' : 'ltr'};
+            text-align: ${rtl ? 'right' : 'left'};
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+          }
+          
+          h1, h2, h3, h4 {
+            font-weight: 600;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+          }
+          
+          h1 { font-size: 24px; }
+          h2 { font-size: 20px; }
+          h3 { font-size: 18px; }
+          
+          p {
+            margin-bottom: 10px;
+          }
+          
+          ul, ol {
+            margin-bottom: 10px;
+            padding-${rtl ? 'right' : 'left'}: 30px;
+          }
+          
+          li {
+            margin-bottom: 5px;
+          }
+          
+          strong {
+            font-weight: 600;
+          }
+        </style>
+      </head>
+      <body>
+        ${cleanHtml}
+      </body>
+      </html>
+    `;
+
+    browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu'
+      ]
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(fullHtml, { waitUntil: 'networkidle0' });
+    
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '20mm',
+        right: '20mm',
+        bottom: '20mm',
+        left: '20mm'
+      }
+    });
+    
+    return Buffer.from(pdfBuffer);
+  } catch (error) {
+    console.error("Export PDF error:", error);
+    throw new Error("فشل تصدير الملف كـ PDF");
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
   }
 }
