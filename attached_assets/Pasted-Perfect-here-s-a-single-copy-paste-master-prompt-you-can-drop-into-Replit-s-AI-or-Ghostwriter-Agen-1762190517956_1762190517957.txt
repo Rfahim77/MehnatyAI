@@ -1,0 +1,286 @@
+Perfect—here’s a single, copy-paste master prompt you can drop into Replit’s AI (or Ghostwriter/Agent) to scaffold the whole app exactly as we aligned: an AI-first, option-led career agent (Arabic-first, KSA-aware) that doesn’t force CV upload.
+
+⸻
+
+MASTER BUILD PROMPT (for Replit)
+
+Project name: AI-First Career Agent (Arabic-first, KSA-aware)
+Stack: Node.js 20 + Express, Vanilla HTML/CSS/JS (RTL first).
+AI: Pluggable LLM via REST (env LLM_API_BASE, LLM_API_KEY).
+Goal: One conversational agent with starter options (buttons). Multimodal in: text + file (PDF/DOCX/Image) when chosen. Out: Arabic/English text + DOCX/PDF exports. No DB for MVP; in-memory session.
+
+1) Create repo structure
+
+/project
+  package.json
+  .env.example
+  README.md
+  /src
+    /server
+      index.js
+      llmClient.js
+      tools.js
+      schema.js
+      exporters.js
+      prompts.js
+      middleware.js
+    /client
+      index.html
+      style.css
+      app.js
+      rtl.css
+      icons.svg
+
+2) Dependencies
+	•	Runtime: express, multer, cors, uuid, zod
+	•	Extraction: pdf-parse, mammoth, tesseract.js (ara+eng)
+	•	Export: docx, marked, sanitize-html, (optional) puppeteer for PDF
+	•	Dev: nodemon, dotenv
+
+package.json scripts:
+
+{
+  "scripts": {
+    "dev": "nodemon src/server/index.js",
+    "start": "node src/server/index.js",
+    "build": "echo 'no build step'"
+  }
+}
+
+3) Environment
+
+.env.example
+
+PORT=3000
+LLM_API_BASE=https://api.your-llm-provider.com/v1/chat/completions
+LLM_API_KEY=sk-xxx
+LLM_MODEL=gpt-4o-mini   # or your chosen model
+ENABLE_PDF=false        # set true to enable puppeteer-based PDF export
+
+4) Server: routes & behavior (Express)
+
+Create these JSON routes (CORS enabled):
+	•	POST /api/chat → main AI entry point; accepts {message, path, session_id, resume_json?, target_job?, jd_text?, tone?}
+	•	path ∈ "resume_review" | "career_chat" | "future_plan" | "tailor_to_job" | "interview" | "cover_letter" | "skills_gap" | "build_from_zero"
+	•	Or omit path and let the agent infer from message.
+	•	Uses function-calling to internal tools (defined below) and returns {reply, cards[], session}.
+	•	POST /api/tools/extract_text → {file} multipart; returns {text, meta}
+	•	POST /api/tools/parse_resume_json → {text}; returns {resume_json, issues[]}
+	•	POST /api/tools/rewrite_bullets_ar → {resume_json, target_job, tone}; returns {markdown}
+	•	POST /api/tools/recommend_path_ksa → {resume_json, target_job}; returns {plan_md}
+	•	POST /api/tools/score_vs_jd → {resume_json, jd_text}; returns {match_summary, gaps_md}
+	•	POST /api/tools/export → {markdown, format: "docx"|"pdf", filename, rtl?: true}; returns file
+	•	GET  /api/health → {ok:true}
+
+Session
+	•	Keep session memory in a simple Map keyed by session_id (UUID). Store: resume_json, tone, target_job, cards[].
+
+5) LLM client (function-calling style)
+	•	llmClient.js: helper that posts to LLM_API_BASE with LLM_API_KEY.
+	•	Support a system prompt (below) and tools: we don’t need OpenAI tool schema; simulate by intercepting function names in the model output or using a “router” instruction in the prompt (below).
+
+6) Schemas & validation (Zod)
+
+schema.js
+	•	ResumeJson strict:
+
+import { z } from "zod";
+export const ResumeJson = z.object({
+  name: z.string().min(1).max(120),
+  contact: z.object({
+    phone: z.string().optional().default(""),
+    email: z.string().optional().default(""),
+    city: z.string().optional().default("Riyadh"),
+    links: z.array(z.string()).default([])
+  }),
+  summary: z.string().optional().default(""),
+  experience: z.array(z.object({
+    title: z.string(),
+    company: z.string().optional().default(""),
+    city: z.string().optional().default(""),
+    start: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+    end: z.string().regex(/^(\d{4}-(0[1-9]|1[0-2])|present)$/),
+    bullets: z.array(z.string()).default([]),
+    skills: z.array(z.string()).default([])
+  })).default([]),
+  education: z.array(z.object({
+    degree: z.string(),
+    field: z.string().optional().default(""),
+    school: z.string().optional().default(""),
+    year: z.string().regex(/^\d{4}$/)
+  })).default([]),
+  skills: z.array(z.string()).default([]),
+  languages: z.array(z.object({
+    name: z.string(),
+    level: z.enum(["Native","C2","C1","B2","B1","A2","A1"])
+  })).default([{name:"Arabic", level:"Native"}]),
+  certifications: z.array(z.string()).default([])
+});
+
+	•	Provide a validateResume(json) that returns {ok, errors[]} with human-readable Arabic issues.
+
+7) Tools implementation (deterministic helpers)
+
+tools.js
+	•	extractText(file):
+	•	.pdf → pdf-parse
+	•	.docx → mammoth
+	•	images → tesseract.js with "ara+eng"
+	•	Normalize Arabic/English digits; trim whitespace.
+	•	parseResumeJson(text):
+	•	Calls LLM with Parse Prompt (below).
+	•	Validate via ResumeJson; return issues if missing keys/dates.
+	•	rewriteBulletsAr(resume_json, target_job, tone):
+	•	Calls LLM with Bullets Prompt; returns Markdown sections.
+	•	recommendPathKsa(resume_json, target_job):
+	•	Calls LLM with Path Prompt; returns plan Markdown.
+	•	scoreVsJD(resume_json, jd_text):
+	•	Calls LLM with JD Match Prompt; return short summary + gaps list.
+	•	exportDocxPdf(markdown, format, rtl):
+	•	Convert Markdown → sanitized HTML → DOCX using docx.
+	•	If ENABLE_PDF=true, render HTML → PDF using puppeteer. Else return DOCX only.
+
+8) Prompts (put in prompts.js)
+
+8.1 System Prompt (Arabic-first, KSA-aware, AI-first)
+
+أنت "مساعد مهني" ثنائي اللغة (العربية/الإنجليزية) يعمل داخل تطبيق ويب لِمستخدمين في الرياض والسعودية.
+الأسلوب: العربية الفصحى افتراضياً، نبرة مهنية ودودة؛ يمكن التحويل إلى نبرة نجدية خفيفة عند الطلب. اجعل الردود موجزة وعملية.
+
+المهام:
+- حوّل السيرة الذاتية لنموذج JSON صارم عند الطلب.
+- ناقش الوضع المهني الحالي والمستقبل، واقترح مسارات وظيفية واقعية داخل المملكة.
+- خصّص السيرة لوظيفة مستهدفة، واكتب نقاطاً عربية قصيرة ≤ 20 كلمة لكل نقطة، تتضمن أفعالاً قوية ونتائج رقمية إن وُجدت.
+- أنشئ ملفات قابلة للتنزيل (DOCX/PDF) من المسودات.
+- درّب المستخدم على المقابلات بأسئلة/ملاحظات محددة.
+
+قواعد صارمة:
+- لا تختلق شهادات أو تواريخ أو شركات.
+- إذا غاب رقم قياسي، ضع "(أضف رقماً تقريبياً)" دون اختراع قيم.
+- احترم اتجاه الكتابة RTL والعناوين العربية.
+- اسأل بحدّ أقصى 3 أسئلة استيضاحية قبل إنتاج مسودة أولى.
+- عند تغيّر الموضوع، لخّص ما تم إنجازه ثم تابع المسار الجديد.
+
+أدواتك (استدعها حين يلزم عبر أسماء وظائف واضحة):
+- extract_text(file)
+- parse_resume_json(text)
+- score_vs_jd(resume_json, jd_text)
+- generate_bullets_ar(resume_json, target_job, tone)
+- recommend_path_ksa(resume_json, target_job)
+- export_docx_pdf(markdown, format, rtl)
+
+8.2 Parse → JSON
+
+مهمتك: استخراج محتوى السيرة الذاتية إلى JSON مطابق تماماً للمخطط التالي (لا تضف حقولاً جديدة):
+{name, contact{phone,email,city,links[]}, summary, experience[{title,company,city,start,end,bullets[],skills[]}], education[{degree,field,school,year}], skills[], languages[{name,level}], certifications[]}
+قواعد:
+- حوّل التواريخ إلى "YYYY-MM" أو "present".
+- إن ظهرت إنجازات بنص حر، انقلها إلى bullets بإيجاز.
+- أعد فقط JSON المضغوط بلا أي نص خارجه.
+النص:
+<<<
+{RESUME_TEXT}
+>>>
+
+8.3 Generate Arabic Bullets
+
+أعد كتابة نقاط الخبرة لتناسب "الوظيفة المستهدفة: {target_job}" وبالنبرة: {tone}.
+القالب: [فعل قوي] + [مهمة/سياق] + [أداة/مهارة] + [نتيجة رقمية].
+القيود: ≤ 20 كلمة لكل نقطة، عربية فصيحة، بلا مبالغة.
+عند غياب الأرقام، أضف "(أضف رقماً تقريبياً)" بدلاً من اختراع رقم.
+أخرجها كأقسام Markdown مرتبة حسب الخبرة.
+
+8.4 Recommend Path (KSA)
+
+بالاعتماد على resume_json و {target_job}:
+- roles_ladder: 3 مراحل داخل KSA (مثال: دعم → محلل I → محلل II)
+- skills_gap: قائمة {skill, current_level 0–5, priority A/B/C}
+- learning_plan: 6–8 خطوات عملية مع مشاريع صغيرة قابلة للعرض
+- timeline: خطة 3–6 أشهر (أهداف شهرية)
+أخرج النتيجة كـ Markdown عربي واضح.
+
+8.5 JD Match
+
+قارن السيرة (resume_json) مع وصف الوظيفة:
+- ملخص تطابق من 3–5 جمل.
+- أهم الفجوات على شكل قائمة قصيرة.
+- اقترح 3 تعديلات نقاط محددة بالعربية.
+
+9) Client UI (Arabic-first, option-led)
+
+9.1 Start screen (index.html)
+	•	RTL dir="rtl" on <html>.
+	•	Header title + microcopy: “مرحباً! كيف تحب نبدأ؟”
+	•	Option buttons (cards) with emojis:
+	•	مراجعة السيرة الذاتية
+	•	نقاش مهني
+	•	تخطيط المستقبل
+	•	تفصيل لوظيفة
+	•	تدريب مقابلة
+	•	كتابة Cover Letter
+	•	فجوات المهارات
+	•	إنشاء سيرة من الصفر
+	•	Chat panel (messages list + input + mic icon).
+	•	“Upload” button appears only when user enters CV flow.
+
+9.2 UX rules
+	•	Conversation is the primary UI; buttons are shortcuts that send a structured /api/chat call with path.
+	•	Use pinned cards to show outputs: “Arabic CV v1”, “JD Match”, “Plan 3 أشهر”, each with quick actions:
+	•	إعادة الصياغة | أقوى أفعال | نبرة نجدية | تنزيل DOCX | تنزيل PDF
+	•	Keep Arabic microcopy short and friendly.
+
+10) Minimal client logic (app.js)
+	•	Maintain session_id (UUID) in localStorage.
+	•	Send {message, path, session_id} to /api/chat.
+	•	Render streaming or final reply.
+	•	If server returns cards[], render each with actions that call /api/tools/... or re-prompt /api/chat.
+	•	File upload: POST to /api/tools/extract_text then auto-call /api/tools/parse_resume_json.
+
+11) Exporter details (exporters.js)
+	•	Markdown → sanitized HTML (RTL container).
+	•	DOCX: use docx with right-to-left sections and Arabic fonts (generic stack).
+	•	If ENABLE_PDF=true, create headless Chrome via puppeteer and print to PDF. Otherwise, fallback to DOCX only.
+
+12) Seed content (RAG-light JSON)
+
+Create a small in-memory object in tools.js:
+	•	Common KSA roles (Arabic/English), responsibilities, keywords:
+	•	خدمة العملاء (Customer Service Rep)
+	•	إدخال بيانات (Data Entry)
+	•	مساعد إداري (Admin Assistant)
+	•	محلل بيانات مبتدئ (Junior Data Analyst)
+	•	تسويق رقمي (Digital Marketing Associate)
+Use it to bias prompts (prepend as context) but never hard-code salaries.
+
+13) First message & quick replies
+
+When /api/chat receives an empty message for a new session, respond with:
+
+مرحباً! أنا مساعدك المهني. اختر مساراً للبدء أو اكتب ما تريد:
+[مراجعة السيرة] [نقاش مهني] [تخطيط المستقبل] [تفصيل لوظيفة] [تدريب مقابلة] [Cover Letter] [فجوات المهارات] [إنشاء سيرة]
+
+14) Acceptance criteria (must pass)
+	1.	Start screen shows options; typing free text also works.
+	2.	No forced upload. CV upload is requested only within resume flows.
+	3.	/api/tools/parse_resume_json returns valid ResumeJson or explicit Arabic issues.
+	4.	User can get a downloadable DOCX for “Arabic CV v1” within one flow. (PDF if ENABLE_PDF=true.)
+	5.	“Tailor to Job” flow: paste JD → see gaps + 3 rewritten bullets in Arabic.
+	6.	Arabic text renders RTL and looks clean on mobile.
+	7.	Switching topics mid-flow does not lose previous cards (kept in session).
+	8.	No hallucinated credentials (enforced by prompt + validator).
+
+15) README.md (author for me)
+	•	How to run locally (npm i, cp .env.example .env, set keys, npm run dev)
+	•	How to change LLM provider (edit llmClient.js)
+	•	Feature list & flows
+	•	Known limitations (PDF optional, no DB)
+	•	Security note: files are processed in memory and discarded
+
+16) Nice-to-have (if time permits)
+	•	Voice input/output (Web Speech API + /api/tools/tts_ar)
+	•	Bilingual export (Arabic first, English after)
+	•	Simple theming (light/dark)
+
+⸻
+
+Build now. Generate all files with working stubs and minimal polished UI. After scaffolding, run npm run dev, show the local URL, and provide example cURL calls for /api/chat, /api/tools/extract_text, and /api/tools/export.
