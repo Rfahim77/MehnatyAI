@@ -3,12 +3,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
-import { useLocation } from "wouter";
 
 export default function Landing() {
   const { t, dir } = useLanguage();
   const { login, isLoading: authLoading } = useAuth();
-  const [, setLocation] = useLocation();
 
   const handleLogin = async () => {
     try {
@@ -18,8 +16,13 @@ export default function Landing() {
     }
   };
 
-  const handleStartNow = () => {
-    setLocation("/home");
+  const handleStartNow = async () => {
+    // "Start Now" triggers authentication to access the career pathways
+    try {
+      await login();
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
   };
 
   return (
