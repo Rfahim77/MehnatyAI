@@ -145,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ];
 
       console.log(`[Chat] Sending ${messages.length} messages to LLM for path: ${path || 'none'}`);
-      let response = await callLLMWithRetry(messages, { maxTokens: 2048 });
+      let response = await callLLMWithRetry(messages, { maxTokens: 12288 });
       console.log(`[Chat] Received response length: ${response.length}`);
       
       // Fallback if LLM returns empty response
@@ -476,7 +476,7 @@ ${JSON.stringify(resumeJson, null, 2)}
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: prompt },
     ],
-    { maxTokens: 2048 }
+    { maxTokens: 12288 }
   );
 }
 
@@ -492,7 +492,7 @@ async function generateCoverLetter(resumeJson: any, targetJob: string): Promise<
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: prompt },
     ],
-    { maxTokens: 2048 }
+    { maxTokens: 8192 }
   );
 }
 
@@ -511,7 +511,7 @@ async function analyzeSkillsGap(resumeJson: any, targetJob: string): Promise<str
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: prompt },
     ],
-    { maxTokens: 2048 }
+    { maxTokens: 8192 }
   );
 }
 
@@ -531,6 +531,6 @@ async function generateInterviewPrep(resumeJson: any, targetJob: string): Promis
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: prompt },
     ],
-    { maxTokens: 2048 }
+    { maxTokens: 8192 }
   );
 }

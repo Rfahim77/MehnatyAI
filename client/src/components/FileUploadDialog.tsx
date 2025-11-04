@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Upload, FileText, X, CheckCircle2, Loader2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FileUploadDialogProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface FileUploadDialogProps {
 }
 
 export function FileUploadDialog({ open, onClose, sessionId, onUploadComplete }: FileUploadDialogProps) {
+  const { t, dir } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<"idle" | "extracting" | "parsing" | "success" | "error">("idle");
@@ -38,7 +40,7 @@ export function FileUploadDialog({ open, onClose, sessionId, onUploadComplete }:
         setUploadStatus("idle");
         setErrorMessage("");
       } else {
-        setErrorMessage("نوع الملف غير مدعوم. يرجى رفع PDF أو DOCX أو صورة.");
+        setErrorMessage(t("fileUpload.error"));
       }
     }
   };
@@ -60,7 +62,7 @@ export function FileUploadDialog({ open, onClose, sessionId, onUploadComplete }:
       });
 
       if (!extractResponse.ok) {
-        throw new Error("فشل استخراج النص من الملف");
+        throw new Error(t("fileUpload.error"));
       }
 
       const { text } = await extractResponse.json();
@@ -75,7 +77,7 @@ export function FileUploadDialog({ open, onClose, sessionId, onUploadComplete }:
       });
 
       if (!parseResponse.ok) {
-        throw new Error("فشل تحليل السيرة الذاتية");
+        throw new Error(t("fileUpload.error"));
       }
 
       const parseResult = await parseResponse.json();
@@ -97,7 +99,7 @@ export function FileUploadDialog({ open, onClose, sessionId, onUploadComplete }:
       }
     } catch (error) {
       console.error("Upload error:", error);
-      setErrorMessage(error instanceof Error ? error.message : "حدث خطأ أثناء رفع الملف");
+      setErrorMessage(error instanceof Error ? error.message : t("fileUpload.error"));
       setUploadStatus("error");
     } finally {
       setIsUploading(false);
@@ -119,11 +121,11 @@ export function FileUploadDialog({ open, onClose, sessionId, onUploadComplete }:
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md" data-testid="dialog-file-upload">
+      <DialogContent className="sm:max-w-md" data-testid="dialog-file-upload" dir={dir}>
         <DialogHeader>
-          <DialogTitle>رفع السيرة الذاتية</DialogTitle>
+          <DialogTitle>{t("fileUpload.title")}</DialogTitle>
           <DialogDescription>
-            ارفع ملف سيرتك الذاتية بصيغة PDF أو DOCX أو صورة
+            {t("fileUpload.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -137,9 +139,9 @@ export function FileUploadDialog({ open, onClose, sessionId, onUploadComplete }:
               data-testid="dropzone"
             >
               <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-foreground mb-2">اسحب الملف أو اضغط للاختيار</p>
+              <p className="text-foreground mb-2">{t("fileUpload.dragOrClick")}</p>
               <p className="text-sm text-muted-foreground">
-                PDF, DOCX, أو صورة (PNG, JPG)
+                {t("fileUpload.supportedFormats")}
               </p>
               <input
                 id="file-input"
@@ -183,19 +185,19 @@ export function FileUploadDialog({ open, onClose, sessionId, onUploadComplete }:
                   {uploadStatus === "extracting" && (
                     <div className="flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                      <span className="text-sm">جارٍ استخراج النص...</span>
+                      <span className="text-sm">{t("fileUpload.extracting")}</span>
                     </div>
                   )}
                   {uploadStatus === "parsing" && (
                     <div className="flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                      <span className="text-sm">جارٍ تحليل السيرة الذاتية...</span>
+                      <span className="text-sm">{t("fileUpload.parsing")}</span>
                     </div>
                   )}
                   {uploadStatus === "success" && (
                     <div className="flex items-center gap-2 text-green-600">
                       <CheckCircle2 className="w-4 h-4" />
-                      <span className="text-sm">تم التحليل بنجاح!</span>
+                      <span className="text-sm">{t("fileUpload.success")}</span>
                     </div>
                   )}
                   {uploadStatus === "error" && (
@@ -214,7 +216,7 @@ export function FileUploadDialog({ open, onClose, sessionId, onUploadComplete }:
                   data-testid="button-upload-file"
                 >
                   <Upload className="w-4 h-4 ml-2" />
-                  رفع وتحليل
+                  {t("fileUpload.uploadAndAnalyze")}
                 </Button>
               )}
             </div>

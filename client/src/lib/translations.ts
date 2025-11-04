@@ -3,42 +3,42 @@ export type Language = "ar" | "en";
 export const translations = {
   ar: {
     // App title
-    appTitle: "مساعد المهنة الذكي",
-    appSubtitle: "بوابتك للنجاح المهني في المملكة العربية السعودية",
+    appTitle: "المساعد المهني الذكي",
+    appSubtitle: "بوابتك نحو النجاح المهني",
     
     // Pathway options
     pathways: {
       resume_review: {
         title: "مراجعة السيرة الذاتية",
-        description: "احصل على تحليل شامل لسيرتك الذاتية مع اقتراحات للتحسين"
+        description: "احصل على تحليل شامل لسيرتك الذاتية مع توصيات للتحسين"
       },
       career_chat: {
-        title: "محادثة مهنية",
-        description: "ناقش مسارك المهني واحصل على نصائح مخصصة"
+        title: "حوار مهني",
+        description: "ناقش مسيرتك المهنية واحصل على استشارات مخصصة"
       },
       future_plan: {
-        title: "التخطيط المستقبلي",
-        description: "خطة مهنية لـ 3-6 أشهر مع رؤى سوق العمل السعودي"
+        title: "التخطيط للمستقبل",
+        description: "خطة مهنية لمدة 3-6 أشهر مع رؤى سوق العمل"
       },
       tailor_to_job: {
         title: "تخصيص للوظيفة",
-        description: "قارن سيرتك الذاتية مع متطلبات الوظيفة واحصل على نقاط محسّنة"
+        description: "قارن سيرتك الذاتية بمتطلبات الوظيفة واحصل على نقاط محسّنة"
       },
       interview: {
-        title: "التحضير للمقابلة",
-        description: "أسئلة المقابلة الشائعة واستراتيجيات الإجابة"
+        title: "الاستعداد للمقابلة",
+        description: "أسئلة المقابلات الشائعة واستراتيجيات الإجابة"
       },
       cover_letter: {
         title: "خطاب التقديم",
-        description: "إنشاء خطاب تقديم مخصص باللغة العربية"
+        description: "إنشاء خطاب تقديم احترافي مخصص"
       },
       skills_gap: {
-        title: "تحليل الفجوات",
+        title: "تحليل فجوات المهارات",
         description: "حدد المهارات المطلوبة وكيفية اكتسابها"
       },
       build_from_zero: {
-        title: "بناء من البداية",
-        description: "إنشاء سيرة ذاتية كاملة من خلال المحادثة"
+        title: "البناء من الصفر",
+        description: "إنشاء سيرة ذاتية كاملة من خلال الحوار"
       }
     },
     
@@ -48,7 +48,7 @@ export const translations = {
       sendButton: "إرسال",
       uploadFile: "رفع ملف",
       newChat: "محادثة جديدة",
-      typing: "جاري الكتابة...",
+      typing: "جارٍ الكتابة...",
       errorMessage: "عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.",
       emptyTitle: "ابدأ المحادثة",
       emptyDescription: "اكتب رسالتك أدناه أو اختر أحد المسارات من الصفحة الرئيسية"
@@ -56,27 +56,31 @@ export const translations = {
     
     // File upload
     fileUpload: {
-      title: "رفع ملف",
-      description: "قم بسحب وإفلات ملف أو انقر للاختيار",
-      supportedFormats: "الصيغ المدعومة: PDF، DOCX، صور",
+      title: "رفع السيرة الذاتية",
+      description: "ارفع ملف سيرتك الذاتية بصيغة PDF أو DOCX أو صورة",
+      dragOrClick: "اسحب الملف أو اضغط للاختيار",
+      supportedFormats: "PDF، DOCX، أو صورة (PNG، JPG)",
       maxSize: "الحد الأقصى للحجم: 10 ميجابايت",
-      uploading: "جاري الرفع...",
-      success: "تم الرفع بنجاح",
-      error: "فشل الرفع"
+      extracting: "جارٍ استخراج النص...",
+      parsing: "جارٍ تحليل السيرة الذاتية...",
+      uploading: "جارٍ الرفع...",
+      success: "تم التحليل بنجاح!",
+      error: "فشل الرفع",
+      uploadAndAnalyze: "رفع وتحليل"
     },
     
     // Output cards
     cards: {
       resume: "السيرة الذاتية",
-      careerPlan: "خطة المسار المهني",
+      careerPlan: "الخطة المهنية",
       jdMatch: "مطابقة الوصف الوظيفي",
-      rewrittenBullets: "نقاط محسّنة",
-      interviewPrep: "التحضير للمقابلة",
+      rewrittenBullets: "النقاط المحسّنة",
+      interviewPrep: "الاستعداد للمقابلة",
       coverLetter: "خطاب التقديم",
-      skillsGap: "تحليل الفجوات",
+      skillsGap: "تحليل فجوات المهارات",
       export: "تصدير",
-      exportDocx: "تصدير DOCX",
-      exportPdf: "تصدير PDF"
+      exportDocx: "تصدير بصيغة DOCX",
+      exportPdf: "تصدير بصيغة PDF"
     },
     
     // Authentication
@@ -84,8 +88,8 @@ export const translations = {
       login: "تسجيل الدخول",
       logout: "تسجيل الخروج",
       signup: "إنشاء حساب",
-      loggingIn: "جاري تسجيل الدخول...",
-      loggingOut: "جاري تسجيل الخروج..."
+      loggingIn: "جارٍ تسجيل الدخول...",
+      loggingOut: "جارٍ تسجيل الخروج..."
     },
     
     // User
@@ -96,7 +100,7 @@ export const translations = {
     
     // Common
     common: {
-      loading: "جاري التحميل...",
+      loading: "جارٍ التحميل...",
       save: "حفظ",
       cancel: "إلغاء",
       close: "إغلاق",
@@ -111,13 +115,13 @@ export const translations = {
   en: {
     // App title
     appTitle: "AI Career Assistant",
-    appSubtitle: "Your gateway to professional success in Saudi Arabia",
+    appSubtitle: "Your gateway to professional success",
     
     // Pathway options
     pathways: {
       resume_review: {
         title: "Resume Review",
-        description: "Get comprehensive analysis of your CV with improvement suggestions"
+        description: "Get comprehensive analysis of your CV with improvement recommendations"
       },
       career_chat: {
         title: "Career Chat",
@@ -125,7 +129,7 @@ export const translations = {
       },
       future_plan: {
         title: "Future Planning",
-        description: "3-6 month career roadmap with KSA market insights"
+        description: "3-6 month career roadmap with market insights"
       },
       tailor_to_job: {
         title: "Tailor to Job",
@@ -137,7 +141,7 @@ export const translations = {
       },
       cover_letter: {
         title: "Cover Letter",
-        description: "Generate a custom cover letter in Arabic"
+        description: "Generate a professional custom cover letter"
       },
       skills_gap: {
         title: "Skills Gap Analysis",
@@ -163,19 +167,23 @@ export const translations = {
     
     // File upload
     fileUpload: {
-      title: "Upload File",
-      description: "Drag and drop a file or click to select",
-      supportedFormats: "Supported formats: PDF, DOCX, images",
+      title: "Upload Resume",
+      description: "Upload your resume in PDF, DOCX, or image format",
+      dragOrClick: "Drag file or click to select",
+      supportedFormats: "PDF, DOCX, or image (PNG, JPG)",
       maxSize: "Max size: 10 MB",
+      extracting: "Extracting text...",
+      parsing: "Analyzing resume...",
       uploading: "Uploading...",
-      success: "Upload successful",
-      error: "Upload failed"
+      success: "Analysis successful!",
+      error: "Upload failed",
+      uploadAndAnalyze: "Upload and Analyze"
     },
     
     // Output cards
     cards: {
       resume: "Resume",
-      careerPlan: "Career Path Plan",
+      careerPlan: "Career Plan",
       jdMatch: "Job Description Match",
       rewrittenBullets: "Improved Bullets",
       interviewPrep: "Interview Preparation",

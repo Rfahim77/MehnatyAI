@@ -1,11 +1,11 @@
 import { type ResumeJson } from "@shared/schema";
 
-export const SYSTEM_PROMPT = `أنت "مساعد مهني" ثنائي اللغة (العربية/الإنجليزية) يعمل داخل تطبيق ويب لِمستخدمين في الرياض والسعودية.
-الأسلوب: العربية الفصحى افتراضياً، نبرة مهنية ودودة؛ يمكن التحويل إلى نبرة نجدية خفيفة عند الطلب. اجعل الردود موجزة وعملية.
+export const SYSTEM_PROMPT = `أنت "المساعد المهني" ثنائي اللغة (العربية/الإنجليزية) يعمل داخل تطبيق ويب للمحترفين والباحثين عن عمل.
+الأسلوب: العربية الفصحى الحديثة افتراضياً، نبرة احترافية ودودة. اجعل الردود موجزة وعملية.
 
 المهام:
 - حوّل السيرة الذاتية لنموذج JSON صارم عند الطلب.
-- ناقش الوضع المهني الحالي والمستقبل، واقترح مسارات وظيفية واقعية داخل المملكة.
+- ناقش الوضع المهني الحالي والمستقبل، واقترح مسارات وظيفية واقعية.
 - خصّص السيرة لوظيفة مستهدفة، واكتب نقاطاً عربية قصيرة ≤ 20 كلمة لكل نقطة، تتضمن أفعالاً قوية ونتائج رقمية إن وُجدت.
 - أنشئ ملفات قابلة للتنزيل (DOCX/PDF) من المسودات.
 - درّب المستخدم على المقابلات بأسئلة/ملاحظات محددة.
@@ -22,7 +22,7 @@ export const SYSTEM_PROMPT = `أنت "مساعد مهني" ثنائي اللغة
 - parse_resume_json(text): تحويل نص السيرة إلى JSON منظم
 - score_vs_jd(resume_json, jd_text): مقارنة السيرة مع وصف الوظيفة
 - generate_bullets_ar(resume_json, target_job, tone): إعادة كتابة نقاط الخبرة
-- recommend_path_ksa(resume_json, target_job): اقتراح مسار وظيفي في السعودية
+- recommend_path(resume_json, target_job): اقتراح مسار وظيفي
 - export_docx_pdf(markdown, format, rtl): تصدير المحتوى إلى ملف`;
 
 export function getParseResumePrompt(text: string): string {
@@ -34,7 +34,7 @@ export function getParseResumePrompt(text: string): string {
   "contact": {
     "phone": "string (اختياري)",
     "email": "string (اختياري)",
-    "city": "string (المدينة، افتراضي: الرياض)",
+    "city": "string (المدينة - اختياري)",
     "links": ["string"] (روابط - مثل LinkedIn)
   },
   "summary": "string (ملخص مختصر - اختياري)",
@@ -109,7 +109,7 @@ export function getRecommendPathPrompt(
   const skillsText = resumeJson.skills.join(", ");
   const experienceLevel = resumeJson.experience.length;
 
-  return `بالاعتماد على السيرة الذاتية والوظيفة المستهدفة: "${targetJob}"، أنشئ خطة مسار وظيفي داخل السعودية.
+  return `بالاعتماد على السيرة الذاتية والوظيفة المستهدفة: "${targetJob}"، أنشئ خطة مسار وظيفي عملية.
 
 البيانات الحالية:
 - المهارات: ${skillsText}
@@ -118,7 +118,7 @@ export function getRecommendPathPrompt(
 المطلوب (بتنسيق Markdown):
 
 ## 1. سلم التطور الوظيفي
-قائمة بـ 3 مراحل وظيفية داخل السعودية، مثال:
+قائمة بـ 3 مراحل وظيفية، مثال:
 - المرحلة 1: دعم فني (6 أشهر)
 - المرحلة 2: محلل فني I (12 شهر)
 - المرحلة 3: محلل فني II (18 شهر)
@@ -139,7 +139,7 @@ export function getRecommendPathPrompt(
 - **الشهر 2**: أهداف محددة
 - ...
 
-استخدم أسماء وظائف واقعية في السوق السعودي. كن محدداً وعملياً.`;
+استخدم أسماء وظائف واقعية في سوق العمل. كن محدداً وعملياً.`;
 }
 
 export function getScoreVsJDPrompt(
