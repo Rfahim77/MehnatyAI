@@ -1,0 +1,133 @@
+Perfect—here’s a single paste-in prompt for Replit to set up branding, colors, typography, icons, PWA/manifest, and RTL UI for Mihnaty AI | مهنتي.
+
+⸻
+
+Replit Build Prompt — Branding Setup for “Mihnaty AI | مهنتي”
+
+Goal: Apply a complete brand system (name, color tokens, typography, RTL styles, icons, manifest) across the app. No feature changes—branding only.
+
+Brand
+	•	App name: Mihnaty AI | مهنتي
+	•	Arabic tagline: مساعدك المهني بالعربية.
+	•	English tagline: Your Arabic career copilot.
+	•	Voice: professional, warm, concise; Arabic-first (MSA), optional light Najdi later.
+
+Color system (create CSS variables + tokens)
+
+Use accessible contrasts (aim ≥ 4.5:1 for text).
+	•	--brand-primary: #0F5132  /* deep green */
+	•	--brand-primary-700: #0B3B24
+	•	--brand-primary-100: #E8F3EE
+	•	--brand-accent: #2CC295   /* mint accent */
+	•	--brand-sand: #F3EDE4     /* warm background */
+	•	--brand-ink: #121212      /* main text */
+	•	--brand-muted: #6B7280    /* secondary text */
+	•	--brand-border: #E5E7EB
+	•	--brand-success: #16A34A
+	•	--brand-danger: #B00020
+	•	--focus-ring: #5AE0B5
+
+Also define:
+	•	--radius: 12px
+	•	--shadow: 0 6px 20px rgba(0,0,0,.08)
+
+Typography (Arabic-first)
+
+Add a font stack that renders Arabic cleanly and falls back well.
+	•	Headings + UI: font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Kufi Arabic", "Noto Naskh Arabic", "Tahoma", Arial, sans-serif;
+	•	Body: same stack; base size 16px; line-height 1.6.
+
+Files to create/update
+	1.	/src/client/style.css
+	•	Add the CSS variables above under :root.
+	•	Global base:
+
+html{direction:rtl}
+body{background:var(--brand-sand);color:var(--brand-ink);font-family:var(--font, -apple-system, BlinkMacSystemFont,"Segoe UI","Noto Kufi Arabic","Noto Naskh Arabic","Tahoma",Arial,sans-serif);}
+a{color:var(--brand-primary)}
+.container{max-width:900px;margin:0 auto;padding:16px}
+.card{background:#fff;border:1px solid var(--brand-border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+.btn{border-radius:12px;padding:12px 16px;border:1px solid transparent}
+.btn-primary{background:var(--brand-primary);color:#fff}
+.btn-outline{background:#fff;color:var(--brand-primary);border-color:var(--brand-primary-100)}
+.chip{display:inline-block;background:var(--brand-primary-100);padding:6px 10px;border-radius:999px}
+.bubble-out{background:#fff;border:1px solid var(--brand-border);border-radius:16px 4px 16px 16px;padding:12px}
+.bubble-in{background:var(--brand-primary);color:#fff;border-radius:4px 16px 16px 16px;padding:12px}
+.brand-title{font-weight:700;letter-spacing:.2px}
+.tagline{color:var(--brand-muted);margin-top:4px}
+.focus-ring:focus{outline:3px solid var(--focus-ring);outline-offset:2px}
+
+
+	•	Add a dark mode media query that swaps sand→#0D1117, text→#EAEAEA, borders→#2A2F36, and uses --brand-accent for links.
+
+	2.	/src/client/index.html
+	•	Set <html dir="rtl" lang="ar">.
+	•	Header brand block:
+
+<header class="container" style="display:flex;align-items:center;gap:12px">
+  <img src="/assets/logo.svg" alt="Mihnaty AI" width="36" height="36" />
+  <div>
+    <div class="brand-title">Mihnaty AI | مهنتي</div>
+    <div class="tagline">مساعدك المهني بالعربية.</div>
+  </div>
+</header>
+
+
+	•	Add meta & PWA hooks:
+
+<meta name="theme-color" content="#0F5132">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/apple-icon-180.png">
+
+
+	3.	/public/manifest.json
+
+{
+  "name": "Mihnaty AI | مهنتي",
+  "short_name": "Mihnaty",
+  "description": "Your Arabic career copilot.",
+  "dir": "rtl",
+  "lang": "ar",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F3EDE4",
+  "theme_color": "#0F5132",
+  "icons": [
+    {"src": "/assets/pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "/assets/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
+
+
+	4.	/src/client/assets/logo.svg (simple, crisp logomark)
+	•	Rounded square in #0F5132 with a white Arabic م centered.
+	•	If text rendering is used, set font-family: "Noto Kufi Arabic", "Noto Naskh Arabic", Tahoma, Arial, sans-serif; font-weight:700.
+	•	Keep 12–16% safe area (works for maskable icons).
+	5.	Raster icons in /src/client/assets/
+	•	favicon-32.png, pwa-192.png, pwa-512.png, apple-icon-180.png.
+	•	Use the same logomark; no transparency for the 1024×1024 master (to be used for App Store later).
+	•	Background: #0F5132; glyph: white م.
+	6.	Copy refresh
+	•	Replace any placeholder brand strings with:
+	•	Title: Mihnaty AI | مهنتي
+	•	Tagline AR: مساعدك المهني بالعربية.
+	•	Tagline EN (fallback locales): Your Arabic career copilot.
+	7.	About footer (minimal)
+	•	Footer line (AR):
+© ${new Date().getFullYear()} Mihnaty AI — نحترم خصوصيتك ولا نختلق شهادات أو خبرات.
+	•	Link to /about.html (create a simple page with brand, tagline, and privacy blurb).
+
+Acceptance Criteria
+	•	All pages load RTL, branded colors, and new typography.
+	•	Header shows logo + “Mihnaty AI | مهنتي” + Arabic tagline.
+	•	Buttons, cards, chat bubbles use brand tokens; focus ring visible.
+	•	Manifest + icons load (Lighthouse shows PWA metadata).
+	•	Dark mode readable and on-brand.
+	•	No layout regressions on mobile.
+
+When done, print a short summary of the files changed and where to tweak color tokens later.
+
+⸻
+
+Paste the prompt above into Replit and let it apply the brand. Once it’s done, open the app on your phone to check RTL, colors, and the icon clarity at small sizes.
