@@ -9,9 +9,10 @@ interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
   sessionId: string;
+  onResumeUploaded?: (resumeJson: any) => void;
 }
 
-export function ChatInput({ onSendMessage, isLoading, sessionId }: ChatInputProps) {
+export function ChatInput({ onSendMessage, isLoading, sessionId, onResumeUploaded }: ChatInputProps) {
   const { t, dir } = useLanguage();
   const [message, setMessage] = useState("");
   const [showUpload, setShowUpload] = useState(false);
@@ -86,6 +87,11 @@ export function ChatInput({ onSendMessage, isLoading, sessionId }: ChatInputProp
         open={showUpload}
         onClose={() => setShowUpload(false)}
         sessionId={sessionId}
+        onUploadComplete={(resumeJson) => {
+          if (onResumeUploaded) {
+            onResumeUploaded(resumeJson);
+          }
+        }}
       />
     </>
   );

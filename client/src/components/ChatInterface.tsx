@@ -15,6 +15,7 @@ interface ChatInterfaceProps {
   onSendMessage: (message: string) => void;
   onClearSession: () => void;
   sessionId: string;
+  onResumeUploaded?: (resumeJson: any) => void;
 }
 
 export function ChatInterface({
@@ -24,6 +25,7 @@ export function ChatInterface({
   onSendMessage,
   onClearSession,
   sessionId,
+  onResumeUploaded,
 }: ChatInterfaceProps) {
   const { t } = useLanguage();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -113,7 +115,7 @@ export function ChatInterface({
 
       {/* Input Area */}
       <div className="sticky bottom-0 bg-background/80 backdrop-blur-lg border-t border-border p-4">
-        <ChatInput onSendMessage={onSendMessage} isLoading={isLoading} sessionId={sessionId} />
+        <ChatInput onSendMessage={onSendMessage} isLoading={isLoading} sessionId={sessionId} onResumeUploaded={onResumeUploaded} />
       </div>
     </div>
   );

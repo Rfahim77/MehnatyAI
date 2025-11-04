@@ -13,9 +13,10 @@ interface FileUploadDialogProps {
   open: boolean;
   onClose: () => void;
   sessionId: string;
+  onUploadComplete?: (resumeJson: any) => void;
 }
 
-export function FileUploadDialog({ open, onClose, sessionId }: FileUploadDialogProps) {
+export function FileUploadDialog({ open, onClose, sessionId, onUploadComplete }: FileUploadDialogProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<"idle" | "extracting" | "parsing" | "success" | "error">("idle");
@@ -84,11 +85,15 @@ export function FileUploadDialog({ open, onClose, sessionId }: FileUploadDialogP
         setUploadStatus("error");
       } else {
         setUploadStatus("success");
+        // Call the callback with parsed resume data
+        if (onUploadComplete && parseResult.resumeJson) {
+          onUploadComplete(parseResult.resumeJson);
+        }
         setTimeout(() => {
           onClose();
           setFile(null);
           setUploadStatus("idle");
-        }, 2000);
+        }, 1500);
       }
     } catch (error) {
       console.error("Upload error:", error);

@@ -18,6 +18,7 @@ export default function Home() {
   const [cards, setCards] = useState<Card[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showOptions, setShowOptions] = useState(true);
+  const [uploadedResume, setUploadedResume] = useState<any>(null);
 
   useEffect(() => {
     // Get or create session ID
@@ -50,7 +51,7 @@ export default function Home() {
     }
   }, [messages, cards]);
 
-  const handleSendMessage = async (message: string, path?: ChatRequest["path"]) => {
+  const handleSendMessage = async (message: string, path?: ChatRequest["path"], resumeJsonOverride?: any) => {
     if (!message.trim() && !path) return;
 
     const userMessage: ChatMessage = {
@@ -64,14 +65,22 @@ export default function Home() {
     setIsLoading(true);
 
     try {
+      const requestBody: ChatRequest = {
+        message,
+        path,
+        sessionId,
+      };
+      
+      // Include resume JSON - either from override or from state
+      const resumeToSend = resumeJsonOverride || uploadedResume;
+      if (resumeToSend) {
+        requestBody.resumeJson = resumeToSend;
+      }
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message,
-          path,
-          sessionId,
-        } as ChatRequest),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -111,12 +120,20 @@ export default function Home() {
     handleSendMessage(message, path);
   };
 
+  const handleResumeUploaded = (resumeJson: any) => {
+    console.log("Resume uploaded:", resumeJson);
+    setUploadedResume(resumeJson);
+    // Automatically send a message to trigger resume review with resume data
+    handleSendMessage("تم رفع السيرة الذاتية. يرجى مراجعتها.", "resume_review", resumeJson);
+  };
+
   const handleClearSession = () => {
     const newSessionId = uuidv4();
     setSessionId(newSessionId);
     setMessages([]);
     setCards([]);
     setShowOptions(true);
+    setUploadedResume(null);
     localStorage.setItem("career_agent_session_id", newSessionId);
     localStorage.removeItem("career_agent_messages");
     localStorage.removeItem("career_agent_cards");
@@ -190,6 +207,7 @@ export default function Home() {
             onSendMessage={handleSendMessage}
             onClearSession={handleClearSession}
             sessionId={sessionId}
+            onResumeUploaded={handleResumeUploaded}
           />
         )}
       </div>
