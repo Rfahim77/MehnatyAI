@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { pgTable, varchar, text, jsonb, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, varchar, text, jsonb, timestamp, integer, index, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
+import { sql } from "drizzle-orm";
 
 // Resume JSON Schema - strict structure for parsing CVs
 export const ResumeJsonSchema = z.object({
@@ -296,8 +297,68 @@ export const KSA_COMMON_ROLES: KSARole[] = [
 ];
 
 // Database Tables (Drizzle ORM)
+
+// Auth session storage table (required for Replit Auth)
+export const authSessions = pgTable(
+  "auth_sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// Users table (required for Replit Auth)
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
+
+// Subscriptions table
+export const subscriptions = pgTable("subscriptions", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  plan: varchar("plan", { length: 50 }).notNull(), // "free", "monthly", "annual"
+  status: varchar("status", { length: 50 }).notNull(), // "active", "canceled", "past_due"
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({ createdAt: true, updatedAt: true });
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+export type SelectSubscription = typeof subscriptions.$inferSelect;
+
+// Usage tracking table
+export const usageTracking = pgTable("usage_tracking", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  messagesCount: integer("messages_count").notNull().default(0),
+  lastMessageReset: timestamp("last_message_reset").notNull().defaultNow(),
+  reviewsCount: integer("reviews_count").notNull().default(0),
+  lastReviewReset: timestamp("last_review_reset").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
+});
+
+export const insertUsageTrackingSchema = createInsertSchema(usageTracking).omit({ lastMessageReset: true, lastReviewReset: true, updatedAt: true });
+export type InsertUsageTracking = z.infer<typeof insertUsageTrackingSchema>;
+export type SelectUsageTracking = typeof usageTracking.$inferSelect;
+
+// Chat sessions (updated to link to userId)
 export const sessions = pgTable("sessions", {
   id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 255 }).references(() => users.id, { onDelete: "set null" }), // Nullable for backward compatibility
   resumeJson: jsonb("resume_json").$type<ResumeJson>(),
   tone: varchar("tone", { length: 50 }),
   targetJob: varchar("target_job", { length: 255 }),

@@ -1,14 +1,36 @@
-import { type Session, type Card, type ChatMessage, sessions, messages, cards, savedResumes, type InsertSession, type InsertMessage, type InsertCard, type InsertSavedResume } from "@shared/schema";
+import { 
+  type Session, 
+  type Card, 
+  type ChatMessage, 
+  sessions, 
+  messages, 
+  cards, 
+  savedResumes,
+  users,
+  subscriptions,
+  usageTracking,
+  type InsertSession, 
+  type InsertMessage, 
+  type InsertCard, 
+  type InsertSavedResume,
+  type User,
+  type UpsertUser,
+  type SelectSubscription,
+  type InsertSubscription,
+  type SelectUsageTracking,
+  type InsertUsageTracking
+} from "@shared/schema";
 import { randomUUID } from "crypto";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pkg from "pg";
 const { Pool } = pkg;
-import { eq, asc, isNull } from "drizzle-orm";
+import { eq, asc, isNull, and, gte, lt } from "drizzle-orm";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle(pool);
 
 export interface IStorage {
+  // Session operations
   getSession(id: string): Promise<Session | undefined>;
   createSession(session: Session): Promise<Session>;
   updateSession(id: string, updates: Partial<Session>): Promise<Session | undefined>;
@@ -18,6 +40,22 @@ export interface IStorage {
   getSessionCards(sessionId: string): Promise<Card[]>;
   saveResume(sessionId: string, name: string, resumeJson: any, targetRole?: string): Promise<void>;
   getSavedResumes(sessionId: string): Promise<any[]>;
+  
+  // User operations (required for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  
+  // Subscription operations
+  getUserSubscription(userId: string): Promise<SelectSubscription | undefined>;
+  createSubscription(subscription: InsertSubscription): Promise<SelectSubscription>;
+  updateSubscription(id: string, updates: Partial<InsertSubscription>): Promise<SelectSubscription | undefined>;
+  
+  // Usage tracking operations
+  getUserUsage(userId: string): Promise<SelectUsageTracking | undefined>;
+  incrementMessageCount(userId: string): Promise<void>;
+  incrementReviewCount(userId: string): Promise<void>;
+  resetDailyMessages(userId: string): Promise<void>;
+  resetMonthlyReviews(userId: string): Promise<void>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -186,6 +224,141 @@ export class PostgresStorage implements IStorage {
       createdAt: r.createdAt.getTime(),
       updatedAt: r.updatedAt.getTime()
     }));
+  }
+
+  // User operations (required for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    
+    // Create default free subscription for new users
+    const existingSubscription = await this.getUserSubscription(user.id);
+    if (!existingSubscription) {
+      await this.createSubscription({
+        id: randomUUID(),
+        userId: user.id,
+        plan: "free",
+        status: "active",
+        stripeSubscriptionId: null,
+        currentPeriodEnd: null
+      });
+      
+      // Create usage tracking for new user
+      await db.insert(usageTracking).values({
+        id: randomUUID(),
+        userId: user.id,
+        messagesCount: 0,
+        reviewsCount: 0
+      });
+    }
+    
+    return user;
+  }
+
+  // Subscription operations
+  async getUserSubscription(userId: string): Promise<SelectSubscription | undefined> {
+    const [subscription] = await db.select().from(subscriptions).where(eq(subscriptions.userId, userId));
+    return subscription;
+  }
+
+  async createSubscription(subscription: InsertSubscription): Promise<SelectSubscription> {
+    const [newSubscription] = await db.insert(subscriptions).values(subscription).returning();
+    return newSubscription;
+  }
+
+  async updateSubscription(id: string, updates: Partial<InsertSubscription>): Promise<SelectSubscription | undefined> {
+    const [updated] = await db
+      .update(subscriptions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(subscriptions.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Usage tracking operations
+  async getUserUsage(userId: string): Promise<SelectUsageTracking | undefined> {
+    const [usage] = await db.select().from(usageTracking).where(eq(usageTracking.userId, userId));
+    return usage;
+  }
+
+  async incrementMessageCount(userId: string): Promise<void> {
+    // Check if reset is needed (daily)
+    const usage = await this.getUserUsage(userId);
+    if (usage) {
+      const now = new Date();
+      const lastReset = new Date(usage.lastMessageReset);
+      const isNewDay = now.toDateString() !== lastReset.toDateString();
+      
+      if (isNewDay) {
+        await this.resetDailyMessages(userId);
+      } else {
+        await db
+          .update(usageTracking)
+          .set({ 
+            messagesCount: usage.messagesCount + 1,
+            updatedAt: new Date()
+          })
+          .where(eq(usageTracking.userId, userId));
+      }
+    }
+  }
+
+  async incrementReviewCount(userId: string): Promise<void> {
+    // Check if reset is needed (monthly)
+    const usage = await this.getUserUsage(userId);
+    if (usage) {
+      const now = new Date();
+      const lastReset = new Date(usage.lastReviewReset);
+      const isNewMonth = now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear();
+      
+      if (isNewMonth) {
+        await this.resetMonthlyReviews(userId);
+      } else {
+        await db
+          .update(usageTracking)
+          .set({ 
+            reviewsCount: usage.reviewsCount + 1,
+            updatedAt: new Date()
+          })
+          .where(eq(usageTracking.userId, userId));
+      }
+    }
+  }
+
+  async resetDailyMessages(userId: string): Promise<void> {
+    await db
+      .update(usageTracking)
+      .set({ 
+        messagesCount: 1,
+        lastMessageReset: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(usageTracking.userId, userId));
+  }
+
+  async resetMonthlyReviews(userId: string): Promise<void> {
+    await db
+      .update(usageTracking)
+      .set({ 
+        reviewsCount: 1,
+        lastReviewReset: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(usageTracking.userId, userId));
   }
 }
 
