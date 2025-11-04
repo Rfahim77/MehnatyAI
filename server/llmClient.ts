@@ -19,9 +19,13 @@ export interface LLMMessage {
 // Helper function to check if error is rate limit or quota violation
 function isRateLimitError(error: any): boolean {
   const errorMsg = error?.message || String(error);
+  const statusCode = error?.status || error?.statusCode || 0;
+  
   return (
+    statusCode === 429 ||
     errorMsg.includes("429") ||
     errorMsg.includes("RATELIMIT_EXCEEDED") ||
+    errorMsg.includes("RESOURCE_EXHAUSTED") ||
     errorMsg.toLowerCase().includes("quota") ||
     errorMsg.toLowerCase().includes("rate limit")
   );
@@ -37,12 +41,22 @@ function convertMessagesToGeminiFormat(messages: LLMMessage[]) {
   
   for (const msg of messages) {
     if (msg.role === "system") {
-      // Accumulate system messages
-      systemPrompt += (systemPrompt ? "\n\n" : "") + msg.content;
+      // For system messages mid-conversation, prepend to NEXT user message
+      if (conversationParts.length > 0 && conversationParts[conversationParts.length - 1].role === "user") {
+        // If last was user, we have a problem - can't have two user messages in a row
+        // Prepend to the last user message instead
+        const lastUserMsg = conversationParts[conversationParts.length - 1];
+        lastUserMsg.parts[0].text = msg.content + "\n\n" + lastUserMsg.parts[0].text;
+      } else {
+        // Accumulate for next user message
+        systemPrompt += (systemPrompt ? "\n\n" : "") + msg.content;
+      }
     } else if (msg.role === "user") {
+      const userText = (systemPrompt ? systemPrompt + "\n\n" : "") + msg.content;
+      systemPrompt = ""; // Reset after using
       conversationParts.push({
         role: "user",
-        parts: [{ text: msg.content }]
+        parts: [{ text: userText }]
       });
     } else if (msg.role === "assistant") {
       conversationParts.push({
@@ -52,11 +66,8 @@ function convertMessagesToGeminiFormat(messages: LLMMessage[]) {
     }
   }
   
-  // If we have a system prompt, prepend it to the first user message
-  if (systemPrompt && conversationParts.length > 0 && conversationParts[0].role === "user") {
-    conversationParts[0].parts[0].text = systemPrompt + "\n\n" + conversationParts[0].parts[0].text;
-  } else if (systemPrompt && conversationParts.length === 0) {
-    // If there's only a system message, treat it as a user message
+  // If we have leftover system prompt and no user messages, treat it as a user message
+  if (systemPrompt && conversationParts.length === 0) {
     conversationParts.push({
       role: "user",
       parts: [{ text: systemPrompt }]
@@ -83,6 +94,10 @@ export async function callLLM(
       maxOutputTokens: options?.maxTokens || 8192,
     };
     
+    if (options?.temperature !== undefined) {
+      config.temperature = options.temperature;
+    }
+    
     if (options?.jsonMode) {
       config.responseMimeType = "application/json";
     }
@@ -99,9 +114,16 @@ export async function callLLM(
       console.error("[LLM] Warning: Empty response from Gemini");
     }
     return content;
-  } catch (error) {
+  } catch (error: any) {
     console.error("LLM Error:", error);
-    throw new Error("فشل الاتصال بالخدمة الذكية");
+    // Preserve original error for retry logic
+    const isRateLimit = isRateLimitError(error);
+    const arabicError = new Error("فشل الاتصال بالخدمة الذكية") as any;
+    // Attach original error metadata for retry detection
+    arabicError.originalError = error;
+    arabicError.status = error?.status || error?.statusCode;
+    arabicError.isRateLimit = isRateLimit;
+    throw arabicError;
   }
 }
 
@@ -121,8 +143,11 @@ export async function callLLMWithRetry(
       try {
         return await callLLM(messages, options);
       } catch (error: any) {
-        // Check if it's a rate limit error
-        if (isRateLimitError(error)) {
+        // Check if it's a rate limit error (using attached metadata)
+        const isRateLimit = error?.isRateLimit || isRateLimitError(error?.originalError || error);
+        
+        if (isRateLimit) {
+          console.log("[LLM] Rate limit detected, will retry...");
           throw error; // Rethrow to trigger p-retry
         }
         // For non-rate-limit errors, throw immediately (don't retry)
@@ -134,6 +159,9 @@ export async function callLLMWithRetry(
       minTimeout: 2000,
       maxTimeout: 128000,
       factor: 2,
+      onFailedAttempt: (error) => {
+        console.log(`[LLM] Retry attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`);
+      }
     }
   );
 }
