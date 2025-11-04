@@ -3,7 +3,7 @@ export type Language = "ar" | "en";
 export const translations = {
   ar: {
     // App title
-    appTitle: "Mihnaty AI | مهنتي",
+    appTitle: "مهنتي | Mihnaty AI",
     appSubtitle: "مساعدك المهني بالذكاء الاصطناعي - مراجعة سيرتك، خطط مهنية، وتدريب على المقابلات بالعربية",
     
     // Pathway options
@@ -85,20 +85,15 @@ export const translations = {
     
     // Landing page
     landing: {
-      tagline: "مساعدك المهني بالذكاء الاصطناعي",
-      login: "تسجيل الدخول",
-      auth: {
-        title: "سجّل دخولك للبدء",
-        description: "احصل على مراجعات سيرتك الذاتية، خطط مهنية مخصصة، وتدريب على المقابلات - كل ذلك مجاناً بالعربية",
-        signIn: "تسجيل الدخول",
-        signUpPrompt: "ليس لديك حساب؟",
-        signUpLink: "سجّل الآن مجاناً",
-        freeAccess: "✨ الوصول مجاني بالكامل - بدون حدود على الاستخدام"
-      },
+      tagline: "مساعدك المهني بالعربية.",
+      login: "سجّل الدخول",
+      signUpPrompt: "لا تملك حسابًا؟",
+      signUpLink: "أنشئ حسابًا مجانًا",
+      freeAccess: "الوصول مجاني حاليًا.",
       hero: {
-        title: "طور مسيرتك المهنية بذكاء اصطناعي متقدم",
-        description: "احصل على مراجعات احترافية للسيرة الذاتية، خطط مهنية مخصصة، وتدريب على المقابلات - كل ذلك بالعربية ومجاناً بالكامل",
-        cta: "ابدأ الآن مجاناً"
+        title: "مهنتي | Mihnaty AI",
+        supportingLine: "مراجعة دقيقة، خطة عملية، وتجهيز ذكي للمقابلات — بالعربية، ومدعومة بالذكاء الاصطناعي.",
+        cta: "ابدأ الآن"
       },
       features: {
         resumeReview: "مراجعة السيرة الذاتية",
@@ -169,7 +164,7 @@ export const translations = {
   
   en: {
     // App title
-    appTitle: "Mihnaty AI | مهنتي",
+    appTitle: "مهنتي | Mihnaty AI",
     appSubtitle: "Your AI Career Copilot - Resume reviews, career plans, and interview prep in Arabic",
     
     // Pathway options
@@ -251,20 +246,15 @@ export const translations = {
     
     // Landing page
     landing: {
-      tagline: "Your Arabic career copilot",
-      login: "Login",
-      auth: {
-        title: "Sign In to Get Started",
-        description: "Get resume reviews, personalized career plans, and interview prep - all free in Arabic",
-        signIn: "Sign In",
-        signUpPrompt: "Don't have an account?",
-        signUpLink: "Sign up for free",
-        freeAccess: "✨ Completely free access - no usage limits"
-      },
+      tagline: "Your Arabic career copilot.",
+      login: "Sign In",
+      signUpPrompt: "Don't have an account?",
+      signUpLink: "Create a free account",
+      freeAccess: "Access is currently free.",
       hero: {
-        title: "Advance Your Career with AI-Powered Guidance",
-        description: "Get professional resume reviews, personalized career plans, and interview training - all in Arabic, completely free",
-        cta: "Get Started Free"
+        title: "مهنتي | Mihnaty AI",
+        supportingLine: "Precise reviews, actionable plans, and smart interview prep — in Arabic, powered by AI.",
+        cta: "Start Now"
       },
       features: {
         resumeReview: "Resume Review",
