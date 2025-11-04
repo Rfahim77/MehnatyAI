@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Briefcase, FileText, Target, MessageSquare, GraduationCap, FileSignature, TrendingUp, Sparkles } from "lucide-react";
-import logoUrl from "/assets/logo.svg";
 
 export default function Landing() {
   const { t, dir, language } = useLanguage();
+  const { login, isLoading: authLoading } = useAuth();
 
   const features = [
     { icon: FileText, titleKey: "landing.features.resumeReview", descKey: "landing.features.resumeReviewDesc" },
@@ -18,8 +20,12 @@ export default function Landing() {
     { icon: Sparkles, titleKey: "landing.features.buildFromZero", descKey: "landing.features.buildFromZeroDesc" },
   ];
 
-  const handleLogin = () => {
-    window.location.href = "/api/login";
+  const handleLogin = async () => {
+    try {
+      await login();
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
   };
 
   return (
@@ -28,15 +34,18 @@ export default function Landing() {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between max-w-6xl">
           <div className="flex items-center gap-3">
-            <img src={logoUrl} alt="Mihnaty AI" className="w-10 h-10" />
+            <img src="/assets/logo.svg" alt="Mihnaty AI" className="w-10 h-10" />
             <div>
               <h1 className="text-xl font-bold text-foreground">Mihnaty AI | مهنتي</h1>
               <p className="text-sm text-muted-foreground">{t("landing.tagline")}</p>
             </div>
           </div>
-          <Button onClick={handleLogin} size="lg" data-testid="button-login">
-            {t("landing.login")}
-          </Button>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <Button onClick={handleLogin} size="lg" data-testid="button-login" disabled={authLoading}>
+              {authLoading ? t("auth.loggingIn") : t("landing.login")}
+            </Button>
+          </div>
         </div>
       </header>
 

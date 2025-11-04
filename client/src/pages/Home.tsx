@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import logoUrl from "/assets/logo.svg";
 
 export default function Home() {
   const { t, dir } = useLanguage();
@@ -146,7 +145,7 @@ export default function Home() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/90 border-b border-border">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between max-w-7xl">
           <div className="flex items-center gap-3">
-            <img src={logoUrl} alt="Mihnaty AI" className="w-9 h-9" />
+            <img src="/assets/logo.svg" alt="Mihnaty AI" className="w-9 h-9" />
             <div className="hidden sm:block">
               <h1 className="text-lg font-bold text-foreground">Mihnaty AI | مهنتي</h1>
               <p className="text-xs text-muted-foreground">{t("landing.tagline")}</p>

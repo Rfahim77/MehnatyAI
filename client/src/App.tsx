@@ -12,15 +12,24 @@ import NotFound from "@/pages/not-found";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Show landing page while loading or if not authenticated
-  if (isLoading || !isAuthenticated) {
-    return <Landing />;
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
-  // Show authenticated routes
+  // Show appropriate routes based on authentication
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/">
+        {isAuthenticated ? <Home /> : <Landing />}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
