@@ -32,6 +32,8 @@ import {
   type CardType,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { setupAuth, isAuthenticated } from "./replitAuth";
+import { checkLimits, trackUsage, getUserUsageStats } from "./subscriptionMiddleware";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -42,13 +44,40 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup Replit Auth
+  await setupAuth(app);
+
   // Health check endpoint
   app.get("/api/health", (req, res) => {
     res.json({ ok: true, timestamp: Date.now() });
   });
 
-  // Main chat endpoint
-  app.post("/api/chat", async (req, res) => {
+  // Auth endpoints
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Get user usage stats
+  app.get('/api/auth/usage', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const usage = await getUserUsageStats(userId);
+      res.json(usage);
+    } catch (error) {
+      console.error("Error fetching usage:", error);
+      res.status(500).json({ message: "Failed to fetch usage stats" });
+    }
+  });
+
+  // Main chat endpoint (with subscription limits)
+  app.post("/api/chat", checkLimits, async (req, res) => {
     try {
       const {
         message,
@@ -296,6 +325,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tone: updatedSession?.tone,
         },
       };
+
+      // Track usage for authenticated users
+      if (req.isAuthenticated()) {
+        const user = req.user as any;
+        const userId = user.claims.sub;
+        await storage.incrementMessageCount(userId);
+        if (path === "resume_review") {
+          await storage.incrementReviewCount(userId);
+        }
+      }
 
       res.json(chatResponse);
     } catch (error) {
