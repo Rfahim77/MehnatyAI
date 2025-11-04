@@ -135,13 +135,25 @@ Each role includes:
 
 ## Recent Fixes (November 4, 2025)
 
-### File Upload Fix
+### PDF Text Extraction Fix
 - **Issue**: PDF uploads were failing with "فشل استخراج النص من الملف" error
 - **Root Cause**: Code was using pdf-parse V1 API but V2.4.5 was installed (class-based API)
 - **Fix Applied**: Updated extractText() to use pdf-parse V2 API:
   - Changed from `pdf_parse(buffer)` to `new PDFParse({ data: buffer }).getText()`
   - Updated import to `import { PDFParse } from "pdf-parse"`
 - **Status**: ✅ PDF, DOCX, and image uploads now working correctly
+
+### Resume Data Integration Fix
+- **Issue**: PDFs were being uploaded and parsed, but the resume JSON was never sent to the chat session
+- **Root Cause**: Callback chain was incomplete - FileUploadDialog had no way to notify parent about parsed resume
+- **Fix Applied**: 
+  - Added `onUploadComplete` callback to FileUploadDialog that receives parsed resumeJson
+  - Updated ChatInput to pass `onResumeUploaded` callback through
+  - Updated ChatInterface to propagate callback
+  - Modified Home.tsx to accept `resumeJsonOverride` parameter in handleSendMessage (avoids async state issues)
+  - Resume JSON now passed directly to first request + stored in state for subsequent messages
+- **Status**: ✅ Resume data flows from upload → parse → chat session → backend storage
+- **Verification**: E2E test confirms assistant receives resume context and asks relevant questions
 
 ## Development Guidelines
 
