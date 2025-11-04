@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LogIn, LogOut, User } from "lucide-react";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export default function Home() {
   const { t, dir } = useLanguage();
@@ -128,6 +129,7 @@ export default function Home() {
         <div className="flex items-center justify-between px-4 py-2">
           <div className="flex-1"></div>
           <div className="flex items-center gap-2">
+            <LanguageSwitcher />
             {authLoading ? (
               <div className="h-9 w-20 bg-muted rounded-md animate-pulse" data-testid="auth-loading"></div>
             ) : user ? (
