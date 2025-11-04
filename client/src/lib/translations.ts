@@ -3,8 +3,8 @@ export type Language = "ar" | "en";
 export const translations = {
   ar: {
     // App title
-    appTitle: "المساعد المهني الذكي",
-    appSubtitle: "بوابتك نحو النجاح المهني",
+    appTitle: "Mihnaty AI | مهنتي",
+    appSubtitle: "مساعدك المهني بالذكاء الاصطناعي - مراجعة سيرتك، خطط مهنية، وتدريب على المقابلات بالعربية",
     
     // Pathway options
     pathways: {
@@ -161,8 +161,8 @@ export const translations = {
   
   en: {
     // App title
-    appTitle: "AI Career Assistant",
-    appSubtitle: "Your gateway to professional success",
+    appTitle: "Mihnaty AI | مهنتي",
+    appSubtitle: "Your AI Career Copilot - Resume reviews, career plans, and interview prep in Arabic",
     
     // Pathway options
     pathways: {
