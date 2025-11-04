@@ -1,7 +1,7 @@
 {
-  "name": "Mihnaty AI | مهنتي",
-  "short_name": "Mihnaty",
-  "description": "Your Arabic career copilot. مساعدك المهني بالعربية.",
+  "name": "مهنتي | Mihnaty AI",
+  "short_name": "مهنتي",
+  "description": "مساعدك المهني بالعربية. Your Arabic career copilot.",
   "dir": "rtl",
   "lang": "ar",
   "start_url": "/",
