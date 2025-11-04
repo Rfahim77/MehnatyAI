@@ -1,0 +1,165 @@
+Awesome — here’s a single paste-in Replit prompt to apply all branding + Arabic copy fixes for Mihnaty AI | مهنتي, including the new hero line:
+
+مراجعة دقيقة، خطة عملية، وتجهيز ذكي للمقابلات — بالعربية، ومدعومة بالذكاء الاصطناعي.
+
+⸻
+
+Replit Build Prompt — Branding & Landing Update for “Mihnaty AI | مهنتي”
+
+Objective: Fix Arabic copy/grammar, ensure the brand name is مهنتي (not “مهني”), add a working logo (inline SVG so paths can’t break), and refresh the landing/PWA metadata. No backend changes.
+
+0) Conventions
+	•	Arabic-first UI. Set <html dir="rtl" lang="ar-SA">.
+	•	Brand name everywhere: Mihnaty AI | مهنتي
+	•	Tagline (under logo): مساعدك المهني بالعربية.
+	•	Hero supporting line: مراجعة دقيقة، خطة عملية، وتجهيز ذكي للمقابلات — بالعربية، ومدعومة بالذكاء الاصطناعي.
+	•	Primary CTA: ابدأ الآن (don’t force login; keep login link secondary).
+
+⸻
+
+1) Update HTML (landing)
+
+Edit the main landing file (usually /src/client/index.html or /index.html).
+Make sure the <html> element is:
+
+<html dir="rtl" lang="ar-SA">
+
+Replace the current header/hero block with this (keeps your classes; uses inline SVG logo so it never 404s):
+
+<header class="container" style="display:flex;align-items:center;gap:12px">
+  <!-- Inline SVG logomark: green tile + white letter م -->
+  <svg width="44" height="44" viewBox="0 0 40 40" aria-label="Mihnaty AI logo" role="img">
+    <rect x="0" y="0" width="40" height="40" rx="9" fill="#0F5132"></rect>
+    <text x="50%" y="58%" text-anchor="middle" fill="#fff"
+          font-family="Noto Kufi Arabic, Tahoma, Arial, sans-serif"
+          font-weight="700" font-size="22">م</text>
+  </svg>
+
+  <div>
+    <h1 style="margin:0;font-weight:800">مهنتي | Mihnaty AI</h1>
+    <div class="tagline" style="color:#6B7280;margin-top:4px">مساعدك المهني بالعربية.</div>
+  </div>
+</header>
+
+<section class="container card" style="margin-top:16px">
+  <p style="margin:0 0 10px 0; font-size:1.05rem;">
+    <strong>مراجعة دقيقة، خطة عملية، وتجهيز ذكي للمقابلات — بالعربية، ومدعومة بالذكاء الاصطناعي.</strong>
+  </p>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
+    <button class="btn btn-primary" id="cta-start">ابدأ الآن</button>
+    <a href="/login" class="btn btn-outline">سجّل الدخول</a>
+  </div>
+
+  <p style="margin-top:8px">
+    لا تملك حسابًا؟ <a href="/signup">أنشئ حسابًا مجانًا</a>
+  </p>
+
+  <p class="chip">الوصول مجاني حاليًا.</p>
+</section>
+
+<footer class="container" style="text-align:center;margin:24px 0;color:#6B7280">
+  جميع بياناتك محمية وآمنة.
+</footer>
+
+If your routes differ, keep the labels but adjust the hrefs.
+
+⸻
+
+2) Fix brand strings globally
+
+Search-and-replace across the project:
+	•	Replace مهني when used as the brand word with مهنتي (don’t change generic uses of “مهني” meaning “professional” in sentences).
+	•	Replace any previous supporting lines with the new one above.
+	•	Ensure the header/title shows مهنتي | Mihnaty AI (in this exact order).
+
+⸻
+
+3) Styles & tokens
+
+Open your main stylesheet (e.g., /src/client/style.css). Ensure these tokens exist; add or override as needed:
+
+:root{
+  --brand-primary:#0F5132;
+  --brand-primary-700:#0B3B24;
+  --brand-primary-100:#E8F3EE;
+  --brand-accent:#2CC295;
+  --brand-sand:#F3EDE4;
+  --brand-ink:#121212;
+  --brand-muted:#6B7280;
+  --brand-border:#E5E7EB;
+  --focus-ring:#5AE0B5;
+  --radius:12px; --shadow:0 6px 20px rgba(0,0,0,.08);
+}
+html{direction:rtl}
+body{background:var(--brand-sand);color:var(--brand-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Kufi Arabic","Noto Naskh Arabic","Tahoma",Arial,sans-serif;line-height:1.6}
+.card{background:#fff;border:1px solid var(--brand-border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+.btn{border-radius:12px;padding:12px 16px;border:1px solid transparent;cursor:pointer}
+.btn-primary{background:var(--brand-primary);color:#fff}
+.btn-outline{background:#fff;color:var(--brand-primary);border-color:var(--brand-primary-100)}
+.chip{display:inline-block;background:var(--brand-primary-100);padding:6px 10px;border-radius:999px}
+.tagline{color:var(--brand-muted)}
+.btn:focus{outline:3px solid var(--focus-ring);outline-offset:2px}
+@media (prefers-color-scheme: dark){
+  body{background:#0D1117;color:#EAEAEA}
+  .card{background:#12161C;border-color:#2A2F36}
+  .btn-outline{background:transparent}
+}
+
+
+⸻
+
+4) PWA / metadata (optional but recommended)
+
+Update /public/manifest.json (or equivalent):
+
+{
+  "name": "Mihnaty AI | مهنتي",
+  "short_name": "Mihnaty",
+  "description": "Your Arabic career copilot.",
+  "dir": "rtl",
+  "lang": "ar",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F3EDE4",
+  "theme_color": "#0F5132",
+  "icons": [
+    {"src": "/assets/pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "/assets/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
+
+Ensure <head> contains:
+
+<meta name="theme-color" content="#0F5132">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/apple-icon-180.png">
+
+
+⸻
+
+5) Keep a file asset too (optional)
+
+Create /public/assets/logo.svg with this content (for use beyond the inline logo):
+
+<svg width="512" height="512" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="40" height="40" rx="9" fill="#0F5132"/>
+  <text x="50%" y="58%" text-anchor="middle" fill="#fff"
+        font-family="Noto Kufi Arabic, Tahoma, Arial, sans-serif" font-weight="700" font-size="22">م</text>
+</svg>
+
+
+⸻
+
+6) Acceptance criteria
+	•	Header shows inline logo and مهنتي | Mihnaty AI (no broken image).
+	•	Tagline under the title: مساعدك المهني بالعربية.
+	•	Hero supporting line exactly:
+مراجعة دقيقة، خطة عملية، وتجهيز ذكي للمقابلات — بالعربية، ومدعومة بالذكاء الاصطناعي.
+	•	Primary CTA reads ابدأ الآن; login links secondary.
+	•	All pages render RTL; colors use the brand tokens; dark mode legible.
+	•	manifest.json has the new name and theme color.
+	•	No instances of the mistaken brand “مهني” in titles.
+
+When finished, print a short summary of files changed and confirm the exact hero line shown on the page.
