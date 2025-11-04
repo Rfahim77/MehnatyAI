@@ -126,6 +126,16 @@ Each role includes:
 1. **Intermittent Empty LLM Responses**: The AI service occasionally returns empty responses (likely rate limiting). App shows fallback error message.
 2. **In-Production**: Real-time collaboration requires active WebSocket connection
 
+## Recent Fixes (November 4, 2025)
+
+### File Upload Fix
+- **Issue**: PDF uploads were failing with "فشل استخراج النص من الملف" error
+- **Root Cause**: Code was using pdf-parse V1 API but V2.4.5 was installed (class-based API)
+- **Fix Applied**: Updated extractText() to use pdf-parse V2 API:
+  - Changed from `pdf_parse(buffer)` to `new PDFParse({ data: buffer }).getText()`
+  - Updated import to `import { PDFParse } from "pdf-parse"`
+- **Status**: ✅ PDF, DOCX, and image uploads now working correctly
+
 ## Development Guidelines
 
 - Arabic-first: All user-facing text in Arabic unless explicitly Latin content
