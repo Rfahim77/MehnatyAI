@@ -79,6 +79,21 @@ export const translations = {
       exportPdf: "تصدير PDF"
     },
     
+    // Authentication
+    auth: {
+      login: "تسجيل الدخول",
+      logout: "تسجيل الخروج",
+      signup: "إنشاء حساب",
+      loggingIn: "جاري تسجيل الدخول...",
+      loggingOut: "جاري تسجيل الخروج..."
+    },
+    
+    // User
+    user: {
+      account: "حسابي",
+      profile: "الملف الشخصي"
+    },
+    
     // Common
     common: {
       loading: "جاري التحميل...",
@@ -169,6 +184,21 @@ export const translations = {
       export: "Export",
       exportDocx: "Export DOCX",
       exportPdf: "Export PDF"
+    },
+    
+    // Authentication
+    auth: {
+      login: "Login",
+      logout: "Logout",
+      signup: "Sign up",
+      loggingIn: "Logging in...",
+      loggingOut: "Logging out..."
+    },
+    
+    // User
+    user: {
+      account: "My Account",
+      profile: "Profile"
     },
     
     // Common

@@ -4,9 +4,14 @@ import { ChatInterface } from "@/components/ChatInterface";
 import { type ChatMessage, type Card, type ChatRequest } from "@shared/schema";
 import { v4 as uuidv4 } from "uuid";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { LogIn, LogOut, User } from "lucide-react";
 
 export default function Home() {
   const { t, dir } = useLanguage();
+  const { user, isLoading: authLoading, login, logout } = useAuth();
   const [sessionId, setSessionId] = useState<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
@@ -118,30 +123,74 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background" dir={dir}>
-      {showOptions && messages.length === 0 ? (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4">
-          <div className="w-full max-w-7xl mx-auto">
-            <header className="text-center mb-12">
-              <h1 className="text-4xl font-bold text-foreground mb-4">
-                {t("appTitle")}
-              </h1>
-              <p className="text-lg text-muted-foreground">
-                {t("appSubtitle")}
-              </p>
-            </header>
-            <OptionCards onOptionClick={handleOptionClick} />
+      {/* Auth header - shown on all pages */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+        <div className="flex items-center justify-between px-4 py-2">
+          <div className="flex-1"></div>
+          <div className="flex items-center gap-2">
+            {authLoading ? (
+              <div className="h-9 w-20 bg-muted rounded-md animate-pulse" data-testid="auth-loading"></div>
+            ) : user ? (
+              <div className="flex items-center gap-2">
+                <Avatar className="h-8 w-8" data-testid="user-avatar">
+                  <AvatarFallback>
+                    <User className="h-4 w-4" />
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm text-foreground hidden sm:inline" data-testid="user-email">
+                  {user.email || user.username || t("user.account")}
+                </span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={logout}
+                  data-testid="button-logout"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  {t("auth.logout")}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                onClick={login}
+                data-testid="button-login"
+              >
+                <LogIn className="h-4 w-4 mr-2" />
+                {t("auth.login")}
+              </Button>
+            )}
           </div>
         </div>
-      ) : (
-        <ChatInterface
-          messages={messages}
-          cards={cards}
-          isLoading={isLoading}
-          onSendMessage={handleSendMessage}
-          onClearSession={handleClearSession}
-          sessionId={sessionId}
-        />
-      )}
+      </div>
+
+      {/* Main content with top padding for fixed header */}
+      <div className="pt-14">
+        {showOptions && messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] p-4">
+            <div className="w-full max-w-7xl mx-auto">
+              <header className="text-center mb-12">
+                <h1 className="text-4xl font-bold text-foreground mb-4">
+                  {t("appTitle")}
+                </h1>
+                <p className="text-lg text-muted-foreground">
+                  {t("appSubtitle")}
+                </p>
+              </header>
+              <OptionCards onOptionClick={handleOptionClick} />
+            </div>
+          </div>
+        ) : (
+          <ChatInterface
+            messages={messages}
+            cards={cards}
+            isLoading={isLoading}
+            onSendMessage={handleSendMessage}
+            onClearSession={handleClearSession}
+            sessionId={sessionId}
+          />
+        )}
+      </div>
     </div>
   );
 }
