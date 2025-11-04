@@ -83,6 +83,53 @@ export const translations = {
       exportPdf: "تصدير بصيغة PDF"
     },
     
+    // Landing page
+    landing: {
+      tagline: "مساعدك المهني بالعربية",
+      login: "تسجيل الدخول",
+      hero: {
+        title: "طور مسيرتك المهنية بذكاء اصطناعي متقدم",
+        description: "احصل على مراجعات احترافية للسيرة الذاتية، خطط مهنية مخصصة، وتدريب على المقابلات - كل ذلك بالعربية ومجاناً بالكامل",
+        cta: "ابدأ الآن مجاناً"
+      },
+      features: {
+        resumeReview: "مراجعة السيرة الذاتية",
+        resumeReviewDesc: "تحليل شامل مع توصيات التحسين",
+        careerChat: "حوار مهني",
+        careerChatDesc: "استشارات مهنية مخصصة",
+        futurePlan: "التخطيط للمستقبل",
+        futurePlanDesc: "خطة مهنية لمدة 3-6 أشهر",
+        tailorJob: "تخصيص للوظيفة",
+        tailorJobDesc: "مطابقة السيرة مع متطلبات الوظيفة",
+        interview: "الاستعداد للمقابلة",
+        interviewDesc: "أسئلة واستراتيجيات المقابلات",
+        coverLetter: "خطاب التقديم",
+        coverLetterDesc: "إنشاء خطابات تقديم احترافية",
+        skillsGap: "تحليل فجوات المهارات",
+        skillsGapDesc: "حدد المهارات وكيفية اكتسابها",
+        buildFromZero: "البناء من الصفر",
+        buildFromZeroDesc: "إنشاء سيرة ذاتية كاملة"
+      },
+      howItWorks: {
+        title: "كيف يعمل؟",
+        step1: "سجّل الدخول",
+        step1Desc: "أنشئ حساباً مجانياً باستخدام Google أو GitHub أو Apple",
+        step2: "اختر مسارك",
+        step2Desc: "حدد أحد المسارات المهنية الثمانية المتاحة",
+        step3: "احصل على توجيه",
+        step3Desc: "تلقَّ استشارات مخصصة باللغة العربية الفصحى"
+      },
+      cta: {
+        title: "جاهز للبدء؟",
+        description: "انضم مجاناً وابدأ رحلتك المهنية اليوم",
+        button: "ابدأ مجاناً"
+      },
+      footer: {
+        copyright: "نحترم خصوصيتك ولا نختلق شهادات أو خبرات",
+        privacy: "جميع بياناتك محمية وآمنة"
+      }
+    },
+    
     // Authentication
     auth: {
       login: "تسجيل الدخول",
@@ -192,6 +239,53 @@ export const translations = {
       export: "Export",
       exportDocx: "Export DOCX",
       exportPdf: "Export PDF"
+    },
+    
+    // Landing page
+    landing: {
+      tagline: "Your Arabic career copilot",
+      login: "Login",
+      hero: {
+        title: "Advance Your Career with AI-Powered Guidance",
+        description: "Get professional resume reviews, personalized career plans, and interview training - all in Arabic, completely free",
+        cta: "Get Started Free"
+      },
+      features: {
+        resumeReview: "Resume Review",
+        resumeReviewDesc: "Comprehensive analysis with improvement recommendations",
+        careerChat: "Career Chat",
+        careerChatDesc: "Personalized career consultations",
+        futurePlan: "Future Planning",
+        futurePlanDesc: "3-6 month career roadmap",
+        tailorJob: "Tailor to Job",
+        tailorJobDesc: "Match resume to job requirements",
+        interview: "Interview Prep",
+        interviewDesc: "Interview questions and strategies",
+        coverLetter: "Cover Letter",
+        coverLetterDesc: "Professional cover letter creation",
+        skillsGap: "Skills Gap Analysis",
+        skillsGapDesc: "Identify and acquire skills",
+        buildFromZero: "Build from Scratch",
+        buildFromZeroDesc: "Create complete resume"
+      },
+      howItWorks: {
+        title: "How It Works",
+        step1: "Sign In",
+        step1Desc: "Create a free account using Google, GitHub, or Apple",
+        step2: "Choose Your Path",
+        step2Desc: "Select one of 8 available career pathways",
+        step3: "Get Guidance",
+        step3Desc: "Receive personalized advice in Modern Standard Arabic"
+      },
+      cta: {
+        title: "Ready to Get Started?",
+        description: "Join free and begin your career journey today",
+        button: "Start Free"
+      },
+      footer: {
+        copyright: "We respect your privacy and never fabricate credentials or experience",
+        privacy: "All your data is protected and secure"
+      }
     },
     
     // Authentication

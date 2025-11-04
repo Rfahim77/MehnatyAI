@@ -6,9 +6,10 @@ import { v4 as uuidv4 } from "uuid";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LogIn, LogOut, User } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LogOut } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import logoUrl from "/assets/logo.svg";
 
 export default function Home() {
   const { t, dir } = useLanguage();
