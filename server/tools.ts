@@ -1,5 +1,4 @@
-import * as pdf_parse_module from "pdf-parse";
-const pdf_parse = (pdf_parse_module as any).default || pdf_parse_module;
+import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
 import Tesseract from "tesseract.js";
 import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } from "docx";
@@ -22,11 +21,12 @@ export async function extractText(fileBuffer: Buffer, mimeType: string): Promise
 }> {
   try {
     if (mimeType === "application/pdf") {
-      const data = await pdf_parse(fileBuffer);
+      const parser = new PDFParse({ data: fileBuffer });
+      const result = await parser.getText();
       return {
-        text: data.text.trim(),
+        text: result.text.trim(),
         meta: {
-          pages: data.numpages,
+          pages: result.numpages,
           fileType: "pdf",
         },
       };
