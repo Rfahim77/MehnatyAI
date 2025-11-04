@@ -1,0 +1,25 @@
+{
+  "name": "Mihnaty AI | مهنتي",
+  "short_name": "Mihnaty",
+  "description": "Your Arabic career copilot. مساعدك المهني بالعربية.",
+  "dir": "rtl",
+  "lang": "ar",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F3EDE4",
+  "theme_color": "#0F5132",
+  "icons": [
+    {
+      "src": "/assets/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
