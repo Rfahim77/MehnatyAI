@@ -1,3 +1,5 @@
+import logoImage from '@assets/generated_images/AI_career_platform_logo_bdf6966b.png';
+
 interface LogoProps {
   size?: number;
   className?: string;
@@ -5,26 +7,13 @@ interface LogoProps {
 
 export function Logo({ size = 44, className = "" }: LogoProps) {
   return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox="0 0 40 40" 
-      aria-label="Mihnaty AI logo" 
-      role="img"
+    <img 
+      src={logoImage}
+      alt="Mihnaty AI logo"
+      width={size}
+      height={size}
       className={className}
-    >
-      <rect x="0" y="0" width="40" height="40" rx="9" fill="#0F5132" />
-      <text 
-        x="50%" 
-        y="58%" 
-        textAnchor="middle" 
-        fill="#fff"
-        fontFamily="Noto Kufi Arabic, Tahoma, Arial, sans-serif"
-        fontWeight="700" 
-        fontSize="22"
-      >
-        م
-      </text>
-    </svg>
+      style={{ objectFit: 'contain' }}
+    />
   );
 }
