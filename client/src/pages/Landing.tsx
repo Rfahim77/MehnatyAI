@@ -42,7 +42,7 @@ export default function Landing() {
             <Logo size={44} />
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                مهنتي | Mihnaty AI
+                مهنتي | Mehnaty AI
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {t("landing.tagline")}

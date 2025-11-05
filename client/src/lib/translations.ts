@@ -3,7 +3,7 @@ export type Language = "ar" | "en";
 export const translations = {
   ar: {
     // App title
-    appTitle: "مهنتي | Mihnaty AI",
+    appTitle: "مهنتي | Mehnaty AI",
     appSubtitle: "مساعدك المهني بالذكاء الاصطناعي - مراجعة سيرتك، خطط مهنية، وتدريب على المقابلات بالعربية",
     
     // Pathway options
