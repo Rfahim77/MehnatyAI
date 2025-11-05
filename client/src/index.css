@@ -71,6 +71,7 @@
 
   --input: 0 0% 72%;
   --ring: 162 67% 51%; /* mint focus ring */
+  --focus-ring: #5AE0B5; /* Accessible mint for focus states */
   --chart-1: 155 85% 18%; /* deep green */
   --chart-2: 162 67% 51%; /* mint */
   --chart-3: 30 33% 93%; /* sand */
@@ -355,5 +356,16 @@
   .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
+  }
+
+  /* Focus ring accessibility enhancement */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
   }
 }

@@ -1,12 +1,15 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
+import { useLocation } from "wouter";
 
 export default function Landing() {
-  const { t, dir } = useLanguage();
+  const { t, dir, language } = useLanguage();
   const { login, isLoading: authLoading } = useAuth();
+  const [, setLocation] = useLocation();
 
   const handleLogin = async () => {
     try {
@@ -42,7 +45,9 @@ export default function Landing() {
             <Logo size={44} />
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                مهنتي | Mehnaty AI
+                <span>مهنتي</span>{" "}
+                <span className="opacity-60">|</span>{" "}
+                <bdi dir="ltr">Mehnaty AI</bdi>
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {t("landing.tagline")}
@@ -52,6 +57,9 @@ export default function Landing() {
 
           {/* Hero Content Card */}
           <div className="bg-card border border-border rounded-lg shadow-sm p-6 md:p-8 mb-6">
+            <h2 className="text-xl md:text-2xl font-bold mb-3 leading-snug">
+              {t("landing.hero.title")}
+            </h2>
             <p className="text-base md:text-lg mb-6 leading-relaxed">
               <strong>{t("landing.hero.supportingLine")}</strong>
             </p>
@@ -96,6 +104,55 @@ export default function Landing() {
               <p className="text-sm font-medium text-primary">
                 {t("landing.freeAccess")}
               </p>
+            </div>
+          </div>
+
+          {/* Quick Start Chips */}
+          <div className="bg-card/50 border border-border/50 rounded-lg p-4 mb-6">
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3">
+              {language === "ar" ? "ابدأ الآن:" : "Quick Start:"}
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              <Badge 
+                variant="secondary"
+                className="cursor-pointer hover-elevate active-elevate-2"
+                onClick={handleStartNow}
+                data-testid="chip-resume-review"
+              >
+                {t("pathways.resume_review.title")}
+              </Badge>
+              <Badge 
+                variant="secondary"
+                className="cursor-pointer hover-elevate active-elevate-2"
+                onClick={handleStartNow}
+                data-testid="chip-tailor-job"
+              >
+                {t("pathways.tailor_to_job.title")}
+              </Badge>
+              <Badge 
+                variant="secondary"
+                className="cursor-pointer hover-elevate active-elevate-2"
+                onClick={handleStartNow}
+                data-testid="chip-interview"
+              >
+                {t("pathways.interview.title")}
+              </Badge>
+              <Badge 
+                variant="secondary"
+                className="cursor-pointer hover-elevate active-elevate-2"
+                onClick={handleStartNow}
+                data-testid="chip-future-plan"
+              >
+                {t("pathways.future_plan.title")}
+              </Badge>
+              <Badge 
+                variant="secondary"
+                className="cursor-pointer hover-elevate active-elevate-2"
+                onClick={handleStartNow}
+                data-testid="chip-build-from-zero"
+              >
+                {t("pathways.build_from_zero.title")}
+              </Badge>
             </div>
           </div>
         </div>
