@@ -340,9 +340,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       res.json(response);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Extract text error:", error);
-      res.status(500).json({ error: "فشل استخراج النص من الملف" });
+      // Return 400 for user errors (invalid files), 500 for server errors
+      const isUserError = error.message && (
+        error.message.includes("غير صالح") ||
+        error.message.includes("غير مدعوم") ||
+        error.message.includes("لا يحتوي على نص") ||
+        error.message.includes("ليس تالفًا") ||
+        error.message.includes("صحة الملف") ||
+        error.message.includes("وضوح النص")
+      );
+      
+      const statusCode = isUserError ? 400 : 500;
+      const errorMessage = error.message || "فشل استخراج النص من الملف";
+      
+      res.status(statusCode).json({ error: errorMessage });
     }
   });
 
