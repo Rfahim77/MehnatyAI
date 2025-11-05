@@ -475,14 +475,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 // Helper functions for card generation
 async function generateResumeReview(resumeJson: any): Promise<string> {
-  const prompt = `راجع السيرة الذاتية التالية وقدم تقييماً شاملاً:
+  const prompt = `راجع السيرة الذاتية التالية وقدم تقييماً شاملاً واحترافياً:
 
 ${JSON.stringify(resumeJson, null, 2)}
 
 المطلوب (بتنسيق Markdown):
-## نقاط القوة
-## نقاط للتحسين
-## اقتراحات عملية`;
+
+## ✨ نقاط القوة
+حدد 3-5 نقاط قوة واضحة في السيرة الذاتية مع أمثلة محددة
+
+## 🔧 نقاط للتحسين
+حدد 3-4 مجالات تحتاج للتطوير مع توضيح السبب
+
+## 💡 اقتراحات عملية
+قدم 3-5 اقتراحات قابلة للتطبيق فوراً لتحسين السيرة
+
+## 🎯 دعنا نناقش أهدافك
+اطرح 2-3 أسئلة تحفيزية لفهم تطلعات المستخدم المهنية وخططه المستقبلية.
+
+استخدم لغة ودية ومحفزة كمدرب مهني متمرس.`;
 
   return await callLLMWithRetry(
     [

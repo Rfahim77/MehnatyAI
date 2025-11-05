@@ -30,6 +30,7 @@ The application features a bilingual Arabic/English interface with full RTL/LTR 
 
 ### Feature Specifications
 - **8 Career Pathways**: Resume Review, Career Chat, Future Planning, Tailor to Job, Interview Prep, Cover Letter, Skills Gap Analysis, and Build from Scratch.
+- **Enhanced Resume Review**: After analyzing uploaded resumes (strengths, weaknesses, suggestions), the AI proactively asks about career goals and future aspirations, providing personalized advice and 3-6 month action plans. The conversational approach mimics a professional career coach.
 - **Authentication**: Integrates Replit Auth for user signup/login (Google, GitHub, Apple, email/password) with user profiles stored in PostgreSQL.
 - **Accessibility**: All features are free and without usage limits.
 - **Modern Standard Arabic**: Ensures professional Modern Standard Arabic (MSA) is used throughout the application, avoiding regional dialects.
