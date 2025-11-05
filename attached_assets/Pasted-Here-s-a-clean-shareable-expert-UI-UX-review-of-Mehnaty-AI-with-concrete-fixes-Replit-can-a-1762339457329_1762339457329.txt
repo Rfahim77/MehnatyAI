@@ -1,0 +1,148 @@
+Here’s a clean, shareable expert UI/UX review of Mehnaty AI | مهنتي with concrete fixes Replit can apply right away.
+
+⸻
+
+TL;DR (top wins if you do nothing else)
+	1.	Make the landing page indexable & instant — prerender/SSR the hero + meta so crawlers and link previews see content. Currently the root responds without visible markup to a simple fetch (client-only render).  ￼
+	2.	Tighten the hero — one decisive headline + your selling point in the supporting line.
+	3.	Polish Arabic RTL & brand consistency — “مهنتي | Mehnaty AI”, letter-free logo, accessible contrast/focus.
+
+⸻
+
+1) Hero content & hierarchy
+
+Goal: “Career development app that leverages AI” should be unmistakable at a glance.
+
+Recommended hero
+	•	Headline (AR): مدرّب مهني يعتمد على الذكاء الاصطناعي.
+	•	Supporting (AR): استخدم الذكاء الاصطناعي لتعزيز مسارك: نراجع سيرتك، نخصّصها للوظيفة، ونبني خطة مهارات ٣–٦ أشهر—بالعربية.
+	•	Primary CTA: ابدأ الآن (guest-friendly; don’t force login)
+
+Drop-in HTML (replace your hero block)
+
+<header class="container brand" dir="rtl" lang="ar-SA" style="display:flex;align-items:center;gap:12px">
+  <!-- Letter-free briefcase+circuits logo (inline so it never 404s) -->
+  <svg width="44" height="44" viewBox="0 0 64 64" aria-label="Mehnaty AI logo" role="img">
+    <rect x="0" y="0" width="64" height="64" rx="12" fill="#0F5132"/>
+    <g fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M24 20h16a4 4 0 0 1 4 4v2H20v-2a4 4 0 0 1 4-4z"/>
+      <rect x="12" y="26" width="40" height="26" rx="4"/>
+      <path d="M22 40v-6m10 16V34m10 6v-6"/>
+      <circle cx="22" cy="34" r="2.8" fill="#2CC295" stroke="none"/>
+      <circle cx="32" cy="30" r="2.8" fill="#2CC295" stroke="none"/>
+      <circle cx="42" cy="34" r="2.8" fill="#2CC295" stroke="none"/>
+      <path d="M22 34h10M42 34H32" />
+    </g>
+  </svg>
+
+  <div>
+    <h1 style="margin:0;font-weight:800">
+      <span>مهنتي</span> <span class="divider">|</span>
+      <bdi dir="ltr">Mehnaty AI</bdi>
+    </h1>
+    <div class="tagline" style="color:#6B7280;margin-top:4px">مساعدك المهني بالعربية.</div>
+  </div>
+</header>
+
+<section class="container card" style="margin-top:16px">
+  <h2 style="margin:0 0 8px 0;font-weight:800">مدرّب مهني يعتمد على الذكاء الاصطناعي.</h2>
+  <p style="margin:0 0 12px 0;font-size:1.05rem">
+    <strong>استخدم الذكاء الاصطناعي لتعزيز مسارك: نراجع سيرتك، نخصّصها للوظيفة، ونبني خطة مهارات ٣–٦ أشهر—بالعربية.</strong>
+  </p>
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <button class="btn btn-primary" id="cta-start">ابدأ الآن</button>
+    <a href="/login" class="btn btn-outline">سجّل الدخول</a>
+  </div>
+</section>
+
+
+⸻
+
+2) Brand & RTL hygiene
+	•	Keep Arabic first | English: مهنتي | Mehnaty AI (never “مهني”, never “Mihnaty”).
+	•	Wrap English brand in <bdi dir="ltr"> so it doesn’t flip in RTL.
+	•	Use Arabic punctuation with thin spaces around the em dash: —.
+	•	Tokens (ensure in your CSS):
+
+:root{--brand-primary:#0F5132;--brand-accent:#2CC295;--brand-sand:#F3EDE4;--brand-ink:#121212;--brand-muted:#6B7280;--brand-border:#E5E7EB;--focus-ring:#5AE0B5;--radius:12px}
+html{direction:rtl}
+body{background:var(--brand-sand);color:var(--brand-ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Kufi Arabic","Noto Naskh Arabic","Tahoma",Arial,sans-serif;line-height:1.6}
+.card{background:#fff;border:1px solid var(--brand-border);border-radius:var(--radius);padding:16px}
+.btn{border-radius:12px;padding:12px 16px;border:1px solid transparent}
+.btn-primary{background:var(--brand-primary);color:#fff}
+.btn-outline{background:#fff;color:var(--brand-primary);border-color:#E8F3EE}
+.btn:focus{outline:3px solid var(--focus-ring);outline-offset:2px}
+.brand .divider{opacity:.6;margin:0 .35em}
+h1 bdi{unicode-bidi:plaintext}
+
+
+⸻
+
+3) Make the landing page discoverable (SSR/prerender)
+
+Right now, a simple fetch of the root returns no static content (client-only render). That means weak SEO, empty link previews, and slower first paint. Fix: prerender the landing (or SSR minimal HTML).  ￼
+
+Minimal prerender path
+	•	Build a static index.html with your hero, features, and footer baked in.
+	•	Add proper meta tags (below).
+	•	Serve it as the default route, and let the SPA hydrate after.
+
+Meta to add in <head>
+
+<title>Mehnaty AI | مهنتي</title>
+<meta name="description" content="Mehnaty AI | مدرّب مهني يعتمد على الذكاء الاصطناعي: مراجعة السيرة، تخصيص للأدوار، خطة مهارات ٣–٦ أشهر، وتجهيز للمقابلات—بالعربية.">
+<meta property="og:title" content="Mehnaty AI | مهنتي">
+<meta property="og:description" content="تطويرك المهني… بذكاءٍ اصطناعي.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/assets/social-card.png">
+<meta property="og:locale" content="ar_SA">
+<meta name="twitter:card" content="summary_large_image">
+
+
+⸻
+
+4) Start options & navigation (micro-UX)
+
+Add quick-start chips under the hero to reduce time-to-value:
+	•	مراجعة السيرة · تفصيل لوظيفة · تدريب مقابلة · خطة مهارات · إنشاء سيرة من الصفر
+
+Each chip should scroll or route to that flow and prefill the chat with a concise system hint. Keep guest mode (no forced auth) for higher conversion.
+
+⸻
+
+5) Accessibility & states
+	•	Visible focus ring (we added above).
+	•	Keyboard: tab order should follow visual order; Enter triggers primary CTA.
+	•	Error/empty states: add friendly Arabic messages (upload limits, OCR fails, AI timeout) with a one-tap “حاول مرة أخرى”.
+	•	Contrast: ensure ≥ 4.5:1 on text against sand/white.
+
+⸻
+
+6) Performance (perceived speed)
+	•	Lazy-load heavy libs (OCR/Tesseract) only when a user enters the résumé flow.
+	•	Inline critical CSS for the hero to paint instantly.
+	•	Add <link rel="preconnect" href="https://YOUR-LLM-DOMAIN"> to reduce AI call latency.
+
+⸻
+
+7) PWA polish (if enabled)
+	•	manifest.json should read Mehnaty AI | مهنتي, with theme #0F5132, maskable icons, and dir:"rtl".
+	•	Provide an offline fallback for the shell and a short <noscript> message for users with JS disabled.
+
+⸻
+
+8) QA checklist (hand to Replit)
+	•	Hero shows: مدرّب مهني يعتمد على الذكاء الاصطناعي.
+	•	Supporting line exactly as above (Arabic punctuation, em dash).
+	•	Header title: مهنتي | Mehnaty AI; English wrapped in <bdi dir="ltr">.
+	•	Letter-free inline SVG logo renders crisp at 44px+.
+	•	Landing HTML is prerendered and contains meta/OG tags (view-source shows content).
+	•	Buttons have visible focus; keyboard flow is correct.
+	•	Quick-start chips present and route to flows.
+	•	Manifest updated; icons are maskable; PWA installs cleanly.
+	•	Error and empty states translated and friendly.
+	•	Heavy libs lazy-loaded; first paint is fast.
+
+⸻
+
+If you want, I can also provide an export-ready icon set (SVG + PNG 1024/512/192/180) and a social preview card that matches the new hero.
