@@ -1,4 +1,4 @@
-import logoImage from '@assets/logo.png';
+import logoImage from '@assets/mehnaty-logo.png';
 
 interface LogoProps {
   size?: number;
@@ -9,7 +9,7 @@ export function Logo({ size = 44, className = "" }: LogoProps) {
   return (
     <img 
       src={logoImage}
-      alt="Mehnaty AI logo"
+      alt="Mehnaty AI | مهنتي - Your AI Career Assistant"
       width={size}
       height={size}
       className={className}
