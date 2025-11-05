@@ -50,6 +50,7 @@ export function FileUploadDialog({ open, onClose, sessionId, onUploadComplete }:
 
     setIsUploading(true);
     setUploadStatus("extracting");
+    setErrorMessage("");
 
     try {
       // Step 1: Extract text from file
@@ -62,7 +63,8 @@ export function FileUploadDialog({ open, onClose, sessionId, onUploadComplete }:
       });
 
       if (!extractResponse.ok) {
-        throw new Error(t("fileUpload.error"));
+        const errorData = await extractResponse.json();
+        throw new Error(errorData.error || t("fileUpload.error"));
       }
 
       const { text } = await extractResponse.json();
@@ -77,7 +79,8 @@ export function FileUploadDialog({ open, onClose, sessionId, onUploadComplete }:
       });
 
       if (!parseResponse.ok) {
-        throw new Error(t("fileUpload.error"));
+        const errorData = await parseResponse.json();
+        throw new Error(errorData.error || t("fileUpload.error"));
       }
 
       const parseResult = await parseResponse.json();
