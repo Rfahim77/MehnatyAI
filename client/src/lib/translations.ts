@@ -85,14 +85,14 @@ export const translations = {
     
     // Landing page
     landing: {
-      tagline: "مساعدك المهني بالعربية.",
+      tagline: "تطبيق تطوير مهني مدعوم بالذكاء الاصطناعي",
       login: "سجّل الدخول",
       signUpPrompt: "لا تملك حسابًا؟",
       signUpLink: "أنشئ حسابًا مجانًا",
       freeAccess: "الوصول مجاني حاليًا.",
       hero: {
         title: "مهنتي | Mihnaty AI",
-        supportingLine: "مراجعة دقيقة، خطة عملية، وإعداد ذكي للمقابلات — بالعربية، ومدعومة بالذكاء الاصطناعي.",
+        supportingLine: "تحليل فوري، توصيات عملية، وتصدير سيرة عربية جاهزة خلال دقائق",
         cta: "ابدأ الآن"
       },
       features: {
