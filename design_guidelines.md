@@ -1,4 +1,4 @@
-# Design Guidelines: AI-First Career Agent (Arabic/KSA)
+# Design Guidelines: Mehnaty AI | مهنتي
 
 ## Design Approach
 
