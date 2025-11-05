@@ -75,11 +75,27 @@ export function getParseResumePrompt(text: string): string {
   "certifications": ["string"] (الشهادات)
 }
 
-قواعد:
-- حوّل التواريخ إلى "YYYY-MM" أو "present".
+قواعد صارمة لأنواع البيانات:
+- جميع الحقول النصية MUST be strings ("text") - ليست أرقاماً أو null أو boolean
+- الحقول الاختيارية: إذا كانت فارغة استخدم "" (نص فارغ) أو احذف الحقل - NEVER use null
+- company و city MUST be strings دائماً (مثال: "شركة ABC", "الرياض", "" إذا فارغة)
+- المصفوفات MUST contain strings only (مثال: ["item1", "item2"])
+- حوّل التواريخ إلى "YYYY-MM" أو "present" كنص.
 - إن ظهرت إنجازات بنص حر، انقلها إلى bullets بإيجاز.
 - إذا كانت البيانات ناقصة أو غير واضحة، ضع قيماً افتراضية منطقية.
 - أعد فقط JSON المضغوط بلا أي نص خارجه.
+
+أمثلة صحيحة:
+✓ "company": "شركة ABC"
+✓ "company": ""
+✓ "city": "الرياض"
+✓ "city": ""
+
+أمثلة خاطئة (لا تفعل):
+✗ "company": null
+✗ "company": 123
+✗ "city": ["الرياض"]
+✗ "city": true
 
 النص:
 <<<
