@@ -65,26 +65,14 @@ export default function Landing() {
             </p>
 
             {/* Primary CTA */}
-            <div className="flex flex-wrap gap-3 mb-4">
-              <Button 
-                onClick={handleStartNow}
-                size="lg" 
-                className="text-base"
-                data-testid="button-start-now"
-              >
-                {t("landing.hero.cta")}
-              </Button>
-              <Button 
-                onClick={handleLogin}
-                variant="outline"
-                size="lg" 
-                className="text-base"
-                data-testid="button-login"
-                disabled={authLoading}
-              >
-                {authLoading ? t("auth.loggingIn") : t("landing.login")}
-              </Button>
-            </div>
+            <Button 
+              onClick={handleStartNow}
+              size="lg" 
+              className="text-base mb-4"
+              data-testid="button-start-now"
+            >
+              {t("landing.hero.cta")}
+            </Button>
 
             {/* Sign Up Text */}
             <p className="text-sm text-muted-foreground">
