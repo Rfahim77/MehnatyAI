@@ -1,25 +1,28 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { OptionCards } from "@/components/OptionCards";
 import { ChatInterface } from "@/components/ChatInterface";
-import { type ChatMessage, type Card, type ChatRequest } from "@shared/schema";
+import { type ChatMessage, type Card, type ChatRequest, type ChatResponse, type ResumeJson } from "@shared/schema";
 import { v4 as uuidv4 } from "uuid";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, ArrowLeft } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Home() {
   const { t, dir } = useLanguage();
   const { user, isLoading: authLoading, login, logout } = useAuth();
+  const { toast } = useToast();
   const [sessionId, setSessionId] = useState<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [showOptions, setShowOptions] = useState(true);
-  const [uploadedResume, setUploadedResume] = useState<any>(null);
+  const [uploadedResume, setUploadedResume] = useState<ResumeJson | null>(null);
 
   useEffect(() => {
     // Get or create session ID
@@ -42,7 +45,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // Persist messages and cards
     if (messages.length > 0) {
       localStorage.setItem("career_agent_messages", JSON.stringify(messages));
       setShowOptions(false);
@@ -52,44 +54,12 @@ export default function Home() {
     }
   }, [messages, cards]);
 
-  const handleSendMessage = async (message: string, path?: ChatRequest["path"], resumeJsonOverride?: any) => {
-    if (!message.trim() && !path) return;
-
-    const userMessage: ChatMessage = {
-      id: uuidv4(),
-      role: "user",
-      content: message,
-      timestamp: Date.now(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
-
-    try {
-      const requestBody: ChatRequest = {
-        message,
-        path,
-        sessionId,
-      };
-      
-      // Include resume JSON - either from override or from state
-      const resumeToSend = resumeJsonOverride || uploadedResume;
-      if (resumeToSend) {
-        requestBody.resumeJson = resumeToSend;
-      }
-
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        throw new Error(t("chat.errorMessage"));
-      }
-
-      const data = await response.json();
-
+  const chatMutation = useMutation({
+    mutationFn: async (requestBody: ChatRequest) => {
+      const response = await apiRequest("POST", "/api/chat", requestBody);
+      return await response.json() as ChatResponse;
+    },
+    onSuccess: (data) => {
       const assistantMessage: ChatMessage = {
         id: uuidv4(),
         role: "assistant",
@@ -100,11 +70,15 @@ export default function Home() {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      if (data.cards && data.cards.length > 0) {
-        setCards(prev => [...prev, ...data.cards]);
+      if (data.cards?.length) {
+        setCards(prev => [...prev, ...(data.cards || [])]);
       }
-    } catch (error) {
+
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    },
+    onError: (error) => {
       console.error("Error sending message:", error);
+      
       const errorMessage: ChatMessage = {
         id: uuidv4(),
         role: "assistant",
@@ -112,19 +86,48 @@ export default function Home() {
         timestamp: Date.now(),
       };
       setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
+
+      toast({
+        variant: "destructive",
+        title: "خطأ في الإرسال",
+        description: error instanceof Error ? error.message : t("chat.errorMessage"),
+      });
+    },
+  });
+
+  const handleSendMessage = (message: string, path?: ChatRequest["path"], resumeJsonOverride?: ResumeJson) => {
+    if (!message.trim() && !path) return;
+
+    const userMessage: ChatMessage = {
+      id: uuidv4(),
+      role: "user",
+      content: message,
+      timestamp: Date.now(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+
+    const requestBody: ChatRequest = {
+      message,
+      path,
+      sessionId,
+    };
+    
+    const resumeToSend = resumeJsonOverride || uploadedResume;
+    if (resumeToSend) {
+      requestBody.resumeJson = resumeToSend;
     }
+
+    chatMutation.mutate(requestBody);
   };
 
   const handleOptionClick = (path: ChatRequest["path"], message: string) => {
     handleSendMessage(message, path);
   };
 
-  const handleResumeUploaded = (resumeJson: any) => {
+  const handleResumeUploaded = (resumeJson: ResumeJson) => {
     console.log("Resume uploaded:", resumeJson);
     setUploadedResume(resumeJson);
-    // Automatically send a message to trigger resume review with resume data
     handleSendMessage("تم رفع السيرة الذاتية. يرجى مراجعتها.", "resume_review", resumeJson);
   };
 
@@ -170,9 +173,9 @@ export default function Home() {
             ) : user ? (
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8" data-testid="user-avatar">
-                  {user.profileImageUrl && <AvatarImage src={user.profileImageUrl} />}
+                  {(user as any).profileImageUrl && <AvatarImage src={(user as any).profileImageUrl} />}
                   <AvatarFallback className="bg-primary text-primary-foreground">
-                    {user.email?.[0]?.toUpperCase() || user.firstName?.[0]?.toUpperCase() || "U"}
+                    {(user as any).email?.[0]?.toUpperCase() || (user as any).firstName?.[0]?.toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <Button
@@ -210,7 +213,7 @@ export default function Home() {
           <ChatInterface
             messages={messages}
             cards={cards}
-            isLoading={isLoading}
+            isLoading={chatMutation.isPending}
             onSendMessage={handleSendMessage}
             onClearSession={handleClearSession}
             sessionId={sessionId}

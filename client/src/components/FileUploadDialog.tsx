@@ -9,12 +9,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Upload, FileText, X, CheckCircle2, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { type ResumeJson } from "@shared/schema";
 
 interface FileUploadDialogProps {
   open: boolean;
   onClose: () => void;
   sessionId: string;
-  onUploadComplete?: (resumeJson: any) => void;
+  onUploadComplete?: (resumeJson: ResumeJson) => void;
 }
 
 export function FileUploadDialog({ open, onClose, sessionId, onUploadComplete }: FileUploadDialogProps) {
@@ -113,8 +114,21 @@ export function FileUploadDialog({ open, onClose, sessionId, onUploadComplete }:
     e.preventDefault();
     const droppedFile = e.dataTransfer.files?.[0];
     if (droppedFile) {
-      const event = { target: { files: [droppedFile] } } as React.ChangeEvent<HTMLInputElement>;
-      handleFileSelect(event);
+      const validTypes = [
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "image/png",
+        "image/jpeg",
+        "image/jpg",
+      ];
+      
+      if (validTypes.includes(droppedFile.type)) {
+        setFile(droppedFile);
+        setUploadStatus("idle");
+        setErrorMessage("");
+      } else {
+        setErrorMessage(t("fileUpload.error"));
+      }
     }
   };
 

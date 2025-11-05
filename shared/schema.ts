@@ -358,7 +358,7 @@ export type SelectUsageTracking = typeof usageTracking.$inferSelect;
 // Chat sessions (updated to link to userId)
 export const sessions = pgTable("sessions", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 }).references(() => users.id, { onDelete: "set null" }), // Nullable for backward compatibility
+  userId: varchar("user_id", { length: 255 }).references(() => users.id, { onDelete: "set null" }),
   resumeJson: jsonb("resume_json").$type<ResumeJson>(),
   tone: varchar("tone", { length: 50 }),
   targetJob: varchar("target_job", { length: 255 }),
@@ -366,7 +366,10 @@ export const sessions = pgTable("sessions", {
   language: varchar("language", { length: 2 }).notNull().default("ar"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   lastActivity: timestamp("last_activity").notNull().defaultNow()
-});
+}, (table) => [
+  index("idx_sessions_user_id").on(table.userId),
+  index("idx_sessions_last_activity").on(table.lastActivity)
+]);
 
 export const messages = pgTable("messages", {
   id: varchar("id", { length: 255 }).primaryKey(),
@@ -374,7 +377,10 @@ export const messages = pgTable("messages", {
   role: varchar("role", { length: 20 }).notNull(),
   content: text("content").notNull(),
   timestamp: timestamp("timestamp").notNull().defaultNow()
-});
+}, (table) => [
+  index("idx_messages_session_id").on(table.sessionId),
+  index("idx_messages_timestamp").on(table.timestamp)
+]);
 
 export const cards = pgTable("cards", {
   id: varchar("id", { length: 255 }).primaryKey(),
@@ -385,7 +391,10 @@ export const cards = pgTable("cards", {
   content: text("content").notNull(),
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").notNull().defaultNow()
-});
+}, (table) => [
+  index("idx_cards_session_id").on(table.sessionId),
+  index("idx_cards_message_id").on(table.messageId)
+]);
 
 export const savedResumes = pgTable("saved_resumes", {
   id: varchar("id", { length: 255 }).primaryKey(),
@@ -396,7 +405,9 @@ export const savedResumes = pgTable("saved_resumes", {
   targetRole: varchar("target_role", { length: 255 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow()
-});
+}, (table) => [
+  index("idx_saved_resumes_session_id").on(table.sessionId)
+]);
 
 // Insert schemas
 export const insertSessionSchema = createInsertSchema(sessions).omit({ createdAt: true, lastActivity: true });

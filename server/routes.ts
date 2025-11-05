@@ -33,6 +33,17 @@ import {
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import {
+  ChatRequestSchema,
+  ParseResumeRequestSchema,
+  RewriteBulletsRequestSchema,
+  RecommendPathRequestSchema,
+  ScoreVsJDRequestSchema,
+  ExportRequestSchema,
+  validateRequest,
+} from "./validation";
+import { rateLimiter, getRateLimitErrorMessage } from "./rateLimit";
+import { sanitizeInput, sanitizeResumeJson, sanitizeJdText } from "./sanitization";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -66,10 +77,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Main chat endpoint (free for all users)
-  app.post("/api/chat", async (req, res) => {
+  // Main chat endpoint (requires authentication)
+  app.post("/api/chat", isAuthenticated, async (req, res) => {
     try {
-      const {
+      // Validate request body
+      const validation = validateRequest(ChatRequestSchema, req.body);
+      if (!validation.success) {
+        return res.status(400).json({
+          error: "خطأ في البيانات المرسلة",
+          details: validation.errors,
+        });
+      }
+
+      let {
         message,
         path,
         sessionId,
@@ -77,7 +97,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetJob,
         jdText,
         tone,
-      } = req.body as ChatRequest;
+      } = validation.data;
+
+      // RATE LIMITING - Check before processing AI request
+      const rateCheck = rateLimiter.checkLimit(sessionId);
+      if (!rateCheck.allowed) {
+        return res.status(429).json({
+          error: getRateLimitErrorMessage(rateCheck.minutesUntilReset!),
+          minutesUntilReset: rateCheck.minutesUntilReset,
+        });
+      }
+
+      // SANITIZATION - Sanitize all user inputs before processing
+      const sanitizationWarnings: string[] = [];
+
+      // Sanitize chat message
+      const messageSanitization = sanitizeInput(message);
+      message = messageSanitization.sanitized;
+      sanitizationWarnings.push(...messageSanitization.warnings);
+
+      // Sanitize resume JSON if provided
+      if (resumeJson) {
+        const resumeSanitization = sanitizeResumeJson(resumeJson);
+        resumeJson = resumeSanitization.sanitized;
+        sanitizationWarnings.push(...resumeSanitization.warnings);
+      }
+
+      // Sanitize job description text if provided
+      if (jdText) {
+        const jdSanitization = sanitizeJdText(jdText);
+        jdText = jdSanitization.sanitized;
+        sanitizationWarnings.push(...jdSanitization.warnings);
+      }
+
+      // Log sanitization warnings if any
+      if (sanitizationWarnings.length > 0) {
+        console.warn(`[Security] Sanitization warnings for session ${sessionId}:`, sanitizationWarnings);
+      }
 
       // Get or create session
       let session = await storage.getSession(sessionId);
@@ -93,9 +149,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.createSession(session);
       }
 
-      // Update session with new data if provided
+      // Update session with new data if provided (using sanitized data)
       if (resumeJson) {
-        await storage.updateSession(sessionId, { resumeJson });
+        await storage.updateSession(sessionId, { resumeJson: resumeJson as any });
         session = await storage.getSession(sessionId);
       }
       if (targetJob) {
@@ -111,7 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         session = await storage.getSession(sessionId);
       }
 
-      // Store user message in session
+      // Store user message in session (using sanitized message)
       const userMessage: ChatMessage = {
         id: randomUUID(),
         role: "user",
@@ -325,11 +381,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Extract text from file
-  app.post("/api/tools/extract_text", upload.single("file"), async (req, res) => {
+  // Extract text from file (requires authentication)
+  app.post("/api/tools/extract_text", isAuthenticated, upload.single("file"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "لم يتم رفع ملف" });
+      }
+
+      // Validate file size (10MB max)
+      const maxSize = 10 * 1024 * 1024;
+      if (req.file.size > maxSize) {
+        return res.status(400).json({ error: "حجم الملف كبير جداً. الحد الأقصى 10 ميجابايت" });
+      }
+
+      // Validate MIME type
+      const allowedMimeTypes = [
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "image/png",
+        "image/jpeg",
+        "image/jpg",
+      ];
+
+      if (!allowedMimeTypes.includes(req.file.mimetype)) {
+        return res.status(400).json({
+          error: "نوع الملف غير مدعوم. الأنواع المسموحة: PDF, DOCX, PNG, JPEG, JPG",
+        });
       }
 
       const result = await extractText(req.file.buffer, req.file.mimetype);
@@ -359,12 +436,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Parse resume to JSON
-  app.post("/api/tools/parse_resume_json", async (req, res) => {
+  // Parse resume to JSON (requires authentication)
+  app.post("/api/tools/parse_resume_json", isAuthenticated, async (req, res) => {
     try {
-      const { text } = req.body;
-      if (!text) {
-        return res.status(400).json({ error: "النص مطلوب" });
+      // Validate request body
+      const validation = validateRequest(ParseResumeRequestSchema, req.body);
+      if (!validation.success) {
+        return res.status(400).json({
+          error: "خطأ في البيانات المرسلة",
+          details: validation.errors,
+        });
+      }
+
+      let { text } = validation.data;
+
+      // SANITIZATION - Sanitize extracted text before parsing
+      const textSanitization = sanitizeInput(text);
+      text = textSanitization.sanitized;
+      
+      if (textSanitization.warnings.length > 0) {
+        console.warn(`[Security] Text sanitization warnings:`, textSanitization.warnings);
       }
 
       const result = await parseResumeJson(text);
@@ -381,16 +472,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rewrite bullets in Arabic
-  app.post("/api/tools/rewrite_bullets_ar", async (req, res) => {
+  // Rewrite bullets in Arabic (requires authentication)
+  app.post("/api/tools/rewrite_bullets_ar", isAuthenticated, async (req, res) => {
     try {
-      const { resumeJson, targetJob, tone } = req.body as RewriteBulletsRequest;
-
-      if (!resumeJson || !targetJob || !tone) {
-        return res.status(400).json({ error: "جميع الحقول مطلوبة" });
+      // Validate request body
+      const validation = validateRequest(RewriteBulletsRequestSchema, req.body);
+      if (!validation.success) {
+        return res.status(400).json({
+          error: "خطأ في البيانات المرسلة",
+          details: validation.errors,
+        });
       }
 
-      const markdown = await rewriteBulletsAr(resumeJson, targetJob, tone);
+      let { resumeJson, targetJob, tone } = validation.data;
+
+      // SANITIZATION - Sanitize resume JSON before processing
+      const resumeSanitization = sanitizeResumeJson(resumeJson);
+      resumeJson = resumeSanitization.sanitized;
+      
+      if (resumeSanitization.warnings.length > 0) {
+        console.warn(`[Security] Resume sanitization warnings:`, resumeSanitization.warnings);
+      }
+
+      const markdown = await rewriteBulletsAr(resumeJson as any, targetJob, tone);
 
       const response: RewriteBulletsResponse = { markdown };
       res.json(response);
@@ -400,16 +504,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Recommend career path for KSA
-  app.post("/api/tools/recommend_path_ksa", async (req, res) => {
+  // Recommend career path for KSA (requires authentication)
+  app.post("/api/tools/recommend_path_ksa", isAuthenticated, async (req, res) => {
     try {
-      const { resumeJson, targetJob } = req.body as RecommendPathRequest;
-
-      if (!resumeJson || !targetJob) {
-        return res.status(400).json({ error: "جميع الحقول مطلوبة" });
+      // Validate request body
+      const validation = validateRequest(RecommendPathRequestSchema, req.body);
+      if (!validation.success) {
+        return res.status(400).json({
+          error: "خطأ في البيانات المرسلة",
+          details: validation.errors,
+        });
       }
 
-      const planMd = await recommendPathKsa(resumeJson, targetJob);
+      let { resumeJson, targetJob } = validation.data;
+
+      // SANITIZATION - Sanitize resume JSON before processing
+      const resumeSanitization = sanitizeResumeJson(resumeJson);
+      resumeJson = resumeSanitization.sanitized;
+      
+      if (resumeSanitization.warnings.length > 0) {
+        console.warn(`[Security] Resume sanitization warnings:`, resumeSanitization.warnings);
+      }
+
+      const planMd = await recommendPathKsa(resumeJson as any, targetJob);
 
       const response: RecommendPathResponse = { planMd };
       res.json(response);
@@ -419,16 +536,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Score resume vs job description
-  app.post("/api/tools/score_vs_jd", async (req, res) => {
+  // Score resume vs job description (requires authentication)
+  app.post("/api/tools/score_vs_jd", isAuthenticated, async (req, res) => {
     try {
-      const { resumeJson, jdText } = req.body as ScoreVsJDRequest;
-
-      if (!resumeJson || !jdText) {
-        return res.status(400).json({ error: "جميع الحقول مطلوبة" });
+      // Validate request body
+      const validation = validateRequest(ScoreVsJDRequestSchema, req.body);
+      if (!validation.success) {
+        return res.status(400).json({
+          error: "خطأ في البيانات المرسلة",
+          details: validation.errors,
+        });
       }
 
-      const result = await scoreVsJD(resumeJson, jdText);
+      let { resumeJson, jdText } = validation.data;
+
+      // SANITIZATION - Sanitize inputs before processing
+      const resumeSanitization = sanitizeResumeJson(resumeJson);
+      resumeJson = resumeSanitization.sanitized;
+      
+      const jdSanitization = sanitizeJdText(jdText);
+      jdText = jdSanitization.sanitized;
+      
+      const allWarnings = [...resumeSanitization.warnings, ...jdSanitization.warnings];
+      if (allWarnings.length > 0) {
+        console.warn(`[Security] Sanitization warnings:`, allWarnings);
+      }
+
+      const result = await scoreVsJD(resumeJson as any, jdText);
 
       const response: ScoreVsJDResponse = result;
       res.json(response);
@@ -438,14 +572,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Export to DOCX/PDF
-  app.post("/api/tools/export", async (req, res) => {
+  // Export to DOCX/PDF (requires authentication)
+  app.post("/api/tools/export", isAuthenticated, async (req, res) => {
     try {
-      const { markdown, format, filename, rtl } = req.body as ExportRequest;
-
-      if (!markdown || !format || !filename) {
-        return res.status(400).json({ error: "جميع الحقول مطلوبة" });
+      // Validate request body
+      const validation = validateRequest(ExportRequestSchema, req.body);
+      if (!validation.success) {
+        return res.status(400).json({
+          error: "خطأ في البيانات المرسلة",
+          details: validation.errors,
+        });
       }
+
+      const { markdown, format, filename, rtl } = validation.data;
 
       if (format === "pdf") {
         const buffer = await exportPdf(markdown, rtl);
