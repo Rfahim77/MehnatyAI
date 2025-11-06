@@ -1,10 +1,12 @@
-import { PDFParse } from "pdf-parse";
-import mammoth from "mammoth";
-import Tesseract from "tesseract.js";
-import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } from "docx";
+// Lazy-loaded heavy dependencies (loaded only when needed)
+// - pdf-parse: Only loaded when parsing PDF files
+// - mammoth: Only loaded when parsing DOCX files  
+// - tesseract.js: Only loaded when performing OCR on images
+// - docx: Only loaded when exporting to DOCX format
+// - puppeteer: Only loaded when exporting to PDF format
+
 import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
-import puppeteer from "puppeteer";
 import { callLLMWithRetry } from "./llmClient";
 import {
   getParseResumePrompt,
@@ -22,6 +24,8 @@ export async function extractText(fileBuffer: Buffer, mimeType: string): Promise
   try {
     if (mimeType === "application/pdf") {
       try {
+        // Lazy-load pdf-parse only when needed
+        const { PDFParse } = await import("pdf-parse");
         const parser = new PDFParse({ data: fileBuffer });
         const result = await parser.getText();
         
@@ -50,6 +54,8 @@ export async function extractText(fileBuffer: Buffer, mimeType: string): Promise
       mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
       try {
+        // Lazy-load mammoth only when needed
+        const mammoth = (await import("mammoth")).default;
         const result = await mammoth.extractRawText({ buffer: fileBuffer });
         
         if (!result.value || result.value.trim().length === 0) {
@@ -71,6 +77,8 @@ export async function extractText(fileBuffer: Buffer, mimeType: string): Promise
       }
     } else if (mimeType.startsWith("image/")) {
       try {
+        // Lazy-load Tesseract.js only when needed
+        const Tesseract = (await import("tesseract.js")).default;
         const result = await Tesseract.recognize(fileBuffer, "ara+eng", {
           logger: (m) => console.log(m),
         });
@@ -208,6 +216,9 @@ export async function scoreVsJD(
 
 export async function exportDocx(markdown: string, rtl: boolean = true): Promise<Buffer> {
   try {
+    // Lazy-load docx library only when needed
+    const { Document, Packer, Paragraph, AlignmentType, HeadingLevel } = await import("docx");
+    
     // Convert markdown to HTML first
     const html = marked(markdown) as string;
     const cleanHtml = sanitizeHtml(html, {
@@ -215,7 +226,7 @@ export async function exportDocx(markdown: string, rtl: boolean = true): Promise
     });
 
     // Parse HTML to create DOCX paragraphs
-    const paragraphs: Paragraph[] = [];
+    const paragraphs: any[] = [];
     const lines = cleanHtml.split(/<\/?(?:p|h[1-4]|li)>/g).filter(Boolean);
 
     for (const line of lines) {
@@ -223,7 +234,7 @@ export async function exportDocx(markdown: string, rtl: boolean = true): Promise
       if (!trimmed || trimmed.startsWith("<")) continue;
 
       // Detect heading level
-      let heading: HeadingLevel | undefined;
+      let heading: any;
       if (trimmed.includes("<h1>")) heading = HeadingLevel.HEADING_1;
       else if (trimmed.includes("<h2>")) heading = HeadingLevel.HEADING_2;
       else if (trimmed.includes("<h3>")) heading = HeadingLevel.HEADING_3;
@@ -278,6 +289,9 @@ export async function exportDocx(markdown: string, rtl: boolean = true): Promise
 export async function exportPdf(markdown: string, rtl: boolean = true): Promise<Buffer> {
   let browser;
   try {
+    // Lazy-load puppeteer only when needed
+    const puppeteer = (await import("puppeteer")).default;
+    
     const html = marked(markdown) as string;
     const cleanHtml = sanitizeHtml(html, {
       allowedTags: ["h1", "h2", "h3", "h4", "p", "ul", "ol", "li", "strong", "em", "br"],
