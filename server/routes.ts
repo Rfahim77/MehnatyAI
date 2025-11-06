@@ -77,8 +77,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Main chat endpoint (requires authentication)
-  app.post("/api/chat", isAuthenticated, async (req, res) => {
+  // Main chat endpoint (authentication disabled for now)
+  app.post("/api/chat", async (req, res) => {
     try {
       // Validate request body
       const validation = validateRequest(ChatRequestSchema, req.body);
@@ -111,8 +111,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // SANITIZATION - Sanitize all user inputs before processing
       const sanitizationWarnings: string[] = [];
 
-      // Sanitize chat message
-      const messageSanitization = sanitizeInput(message);
+      // Sanitize chat message (handle optional message)
+      const messageSanitization = sanitizeInput(message || "");
       message = messageSanitization.sanitized;
       sanitizationWarnings.push(...messageSanitization.warnings);
 
@@ -382,7 +382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Extract text from file (requires authentication)
-  app.post("/api/tools/extract_text", isAuthenticated, upload.single("file"), async (req, res) => {
+  app.post("/api/tools/extract_text", upload.single("file"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "لم يتم رفع ملف" });
@@ -437,7 +437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Parse resume to JSON (requires authentication)
-  app.post("/api/tools/parse_resume_json", isAuthenticated, async (req, res) => {
+  app.post("/api/tools/parse_resume_json", async (req, res) => {
     try {
       // Validate request body
       const validation = validateRequest(ParseResumeRequestSchema, req.body);
@@ -473,7 +473,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rewrite bullets in Arabic (requires authentication)
-  app.post("/api/tools/rewrite_bullets_ar", isAuthenticated, async (req, res) => {
+  app.post("/api/tools/rewrite_bullets_ar", async (req, res) => {
     try {
       // Validate request body
       const validation = validateRequest(RewriteBulletsRequestSchema, req.body);
@@ -505,7 +505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Recommend career path for KSA (requires authentication)
-  app.post("/api/tools/recommend_path_ksa", isAuthenticated, async (req, res) => {
+  app.post("/api/tools/recommend_path_ksa", async (req, res) => {
     try {
       // Validate request body
       const validation = validateRequest(RecommendPathRequestSchema, req.body);
@@ -537,7 +537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Score resume vs job description (requires authentication)
-  app.post("/api/tools/score_vs_jd", isAuthenticated, async (req, res) => {
+  app.post("/api/tools/score_vs_jd", async (req, res) => {
     try {
       // Validate request body
       const validation = validateRequest(ScoreVsJDRequestSchema, req.body);
@@ -573,7 +573,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Export to DOCX/PDF (requires authentication)
-  app.post("/api/tools/export", isAuthenticated, async (req, res) => {
+  app.post("/api/tools/export", async (req, res) => {
     try {
       // Validate request body
       const validation = validateRequest(ExportRequestSchema, req.body);
