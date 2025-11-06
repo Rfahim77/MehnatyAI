@@ -4,7 +4,7 @@ export const translations = {
   ar: {
     // App title
     appTitle: "مهنتي | Mehnaty AI",
-    appSubtitle: "مساعدك المهني بالذكاء الاصطناعي - مراجعة سيرتك، خطط مهنية، وتدريب على المقابلات بالعربية",
+    appSubtitle: "مساعدك في التطوير الوظيفي بالذكاء الاصطناعي — مراجعة سيرتك، خطط وظيفية، وتدريب على المقابلات بالعربية",
     
     // Pathway options
     pathways: {
@@ -13,8 +13,8 @@ export const translations = {
         description: "احصل على تحليل شامل لسيرتك مع توصيات عملية للتحسين."
       },
       career_chat: {
-        title: "استشارة مهنية",
-        description: "ناقِش مسارك المهني واحصل على إرشاد مخصّص."
+        title: "استشارة وظيفية",
+        description: "ناقِش مسارك الوظيفي واحصل على إرشاد مخصّص."
       },
       future_plan: {
         title: "التخطيط للمستقبل",
@@ -72,7 +72,7 @@ export const translations = {
     // Output cards
     cards: {
       resume: "السيرة الذاتية",
-      careerPlan: "الخطة المهنية",
+      careerPlan: "الخطة الوظيفية",
       jdMatch: "مطابقة الوصف الوظيفي",
       rewrittenBullets: "النقاط المحسّنة",
       interviewPrep: "الاستعداد للمقابلة",
@@ -85,23 +85,23 @@ export const translations = {
     
     // Landing page
     landing: {
-      tagline: "مساعدك المهني بالعربية",
+      tagline: "مساعدك الوظيفي بالعربية",
       login: "سجّل الدخول",
       signUpPrompt: "لا تملك حسابًا؟",
       signUpLink: "أنشئ حسابًا مجانًا",
       freeAccess: "مجاني تمامًا — جميع المزايا متاحة بدون حدود",
       hero: {
-        title: "مدرّب مهني يعتمد على الذكاء الاصطناعي",
-        supportingLine: "استخدم الذكاء الاصطناعي لتعزيز مسارك: نراجع سيرتك، نخصّصها للوظيفة، ونبني خطة مهارات ٣–٦ أشهر — بالعربية",
+        title: "مدرّب للتطوير الوظيفي يعتمد على الذكاء الاصطناعي",
+        supportingLine: "استخدم الذكاء الاصطناعي لتعزيز مسارك الوظيفي: نراجع سيرتك، نخصّصها للوظيفة، ونبني خطة مهارات ٣–٦ أشهر — بالعربية",
         cta: "ابدأ الآن"
       },
       features: {
         resumeReview: "مراجعة السيرة الذاتية",
         resumeReviewDesc: "تحليل شامل مع توصيات التحسين",
-        careerChat: "استشارة مهنية",
-        careerChatDesc: "استشارات مهنية مخصصة",
+        careerChat: "استشارة وظيفية",
+        careerChatDesc: "استشارات وظيفية مخصصة",
         futurePlan: "التخطيط للمستقبل",
-        futurePlanDesc: "خطة مهنية لمدة ٣–٦ أشهر",
+        futurePlanDesc: "خطة وظيفية لمدة ٣–٦ أشهر",
         tailorJob: "مواءمة السيرة الذاتية للوظيفة",
         tailorJobDesc: "مطابقة السيرة مع متطلبات الوظيفة",
         interview: "الاستعداد للمقابلة",
@@ -118,13 +118,13 @@ export const translations = {
         step1: "سجّل الدخول",
         step1Desc: "أنشئ حساباً مجانياً باستخدام Google أو GitHub أو Apple",
         step2: "اختر مسارك",
-        step2Desc: "حدد أحد المسارات المهنية الثمانية المتاحة",
+        step2Desc: "حدد أحد المسارات الوظيفية الـ٨ المتاحة",
         step3: "احصل على توجيه",
         step3Desc: "احصل على استشارات مخصصة باللغة العربية الفصحى"
       },
       cta: {
         title: "جاهز للبدء؟",
-        description: "انضم مجاناً وابدأ رحلتك المهنية اليوم",
+        description: "انضم مجاناً وابدأ رحلتك الوظيفية اليوم",
         button: "ابدأ مجاناً"
       },
       footer: {
