@@ -11,16 +11,12 @@ export default function Landing() {
   const { login, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
 
-  const handleLogin = async () => {
-    try {
-      await login();
-    } catch (error) {
-      console.error("Login failed:", error);
-    }
+  const handleContinueAsGuest = () => {
+    // Navigate to Home without authentication - fully accessible
+    setLocation("/home");
   };
 
-  const handleStartNow = async () => {
-    // "Start Now" triggers authentication to access the career pathways
+  const handleSignIn = async () => {
     try {
       await login();
     } catch (error) {
@@ -64,31 +60,55 @@ export default function Landing() {
               <strong>{t("landing.hero.supportingLine")}</strong>
             </p>
 
-            {/* Primary CTA */}
+            {/* Primary CTA - Continue as Guest */}
             <Button 
-              onClick={handleStartNow}
+              onClick={handleContinueAsGuest}
               size="lg" 
-              className="text-base mb-4"
-              data-testid="button-start-now"
+              className="w-full text-base mb-3"
+              data-testid="button-continue-guest"
             >
-              {t("landing.hero.cta")}
+              {language === "ar" ? "ابدأ الآن كضيف" : "Continue as Guest"}
             </Button>
 
-            {/* Sign Up Text */}
-            <p className="text-sm text-muted-foreground">
-              {t("landing.signUpPrompt")}{" "}
-              <button 
-                onClick={handleLogin}
-                className="text-primary hover:underline font-medium"
-                disabled={authLoading}
-                data-testid="button-signup"
-              >
-                {t("landing.signUpLink")}
-              </button>
-            </p>
+            {/* Secondary CTA - Sign In */}
+            <Button 
+              onClick={handleSignIn}
+              size="lg"
+              variant="outline"
+              className="w-full text-base mb-4"
+              disabled={authLoading}
+              data-testid="button-sign-in"
+            >
+              {language === "ar" ? "تسجيل الدخول" : "Sign In"}
+            </Button>
+
+            {/* Benefits of Signing In */}
+            <div className="mt-6 bg-muted/50 rounded-lg p-4">
+              <p className="text-sm font-semibold mb-2 text-foreground">
+                {language === "ar" ? "✨ مميزات تسجيل الدخول:" : "✨ Benefits of Signing In:"}
+              </p>
+              <ul className="text-sm space-y-1 text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  <span>{language === "ar" ? "احفظ سيرتك الذاتية على جميع الأجهزة" : "Save your resume across all devices"}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  <span>{language === "ar" ? "وصول دائم لمحادثاتك المهنية" : "Access your career conversations anytime"}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  <span>{language === "ar" ? "تصدير المستندات إلى البريد الإلكتروني" : "Export documents to email"}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  <span>{language === "ar" ? "لن تفقد تقدمك أبداً" : "Never lose your progress"}</span>
+                </li>
+              </ul>
+            </div>
 
             {/* Free Access Chip */}
-            <div className="mt-6 inline-block bg-primary/10 px-3 py-1.5 rounded-full">
+            <div className="mt-4 inline-block bg-primary/10 px-3 py-1.5 rounded-full">
               <p className="text-sm font-medium text-primary">
                 {t("landing.freeAccess")}
               </p>
@@ -98,13 +118,13 @@ export default function Landing() {
           {/* Quick Start Chips */}
           <div className="bg-card/50 border border-border/50 rounded-lg p-4 mb-6">
             <h3 className="text-sm font-semibold text-muted-foreground mb-3">
-              {language === "ar" ? "ابدأ الآن:" : "Quick Start:"}
+              {language === "ar" ? "المسارات المهنية المتوفرة:" : "Available Career Pathways:"}
             </h3>
             <div className="flex flex-wrap gap-2">
               <Badge 
                 variant="secondary"
                 className="cursor-pointer hover-elevate active-elevate-2"
-                onClick={handleStartNow}
+                onClick={handleContinueAsGuest}
                 data-testid="chip-resume-review"
               >
                 {t("pathways.resume_review.title")}
@@ -112,7 +132,7 @@ export default function Landing() {
               <Badge 
                 variant="secondary"
                 className="cursor-pointer hover-elevate active-elevate-2"
-                onClick={handleStartNow}
+                onClick={handleContinueAsGuest}
                 data-testid="chip-tailor-job"
               >
                 {t("pathways.tailor_to_job.title")}
@@ -120,7 +140,7 @@ export default function Landing() {
               <Badge 
                 variant="secondary"
                 className="cursor-pointer hover-elevate active-elevate-2"
-                onClick={handleStartNow}
+                onClick={handleContinueAsGuest}
                 data-testid="chip-interview"
               >
                 {t("pathways.interview.title")}
@@ -128,7 +148,7 @@ export default function Landing() {
               <Badge 
                 variant="secondary"
                 className="cursor-pointer hover-elevate active-elevate-2"
-                onClick={handleStartNow}
+                onClick={handleContinueAsGuest}
                 data-testid="chip-future-plan"
               >
                 {t("pathways.future_plan.title")}
@@ -136,7 +156,7 @@ export default function Landing() {
               <Badge 
                 variant="secondary"
                 className="cursor-pointer hover-elevate active-elevate-2"
-                onClick={handleStartNow}
+                onClick={handleContinueAsGuest}
                 data-testid="chip-build-from-zero"
               >
                 {t("pathways.build_from_zero.title")}
