@@ -1,0 +1,141 @@
+Congrats on the launch! I ran an external check on https://mehnaty.io and here’s a crisp, expert E2E + code/infra review you can hand to your Replit dev.
+
+⸻
+
+1) What the crawler sees (objective checks)
+	•	Root page returns no visible HTML content to a simple fetch (likely client-only rendering). This hurts SEO, social previews, and first paint.  ￼
+	•	www subdomain (https://www.mehnaty.io) returns 502 Bad Gateway instead of 301 redirect to apex.  ￼
+
+Do now
+	•	Prerender/SSR the landing (hero + features + footer + meta).
+	•	Add a www → mehnaty.io 301 redirect at DNS/proxy or app level.
+
+⸻
+
+2) Landing & UX (fast wins)
+
+Hero (final wording)
+	•	Headline: مدرّب مهني يعتمد على الذكاء الاصطناعي.
+	•	Supporting: استخدم الذكاء الاصطناعي لتعزيز مسارك: نراجع سيرتك، نخصّصها للوظيفة، ونبني خطة مهارات ٣–٦ أشهر — بالعربية.
+	•	CTA: ابدأ الآن كضيف (keep login secondary).
+
+Polish
+	•	Keep the brand مهنتي | Mehnaty AI everywhere (header, <title>, manifest, OG).
+	•	Wrap English brand in <bdi dir="ltr">Mehnaty AI</bdi> so it never flips in RTL.
+	•	Use thin spaces around the em dash — and normalize to ٣–٦ أشهر (not ٦-٣).
+
+Start options (chips under hero)
+
+مراجعة السيرة · تفصيل لوظيفة · تدريب مقابلة · خطة مهارات · إنشاء سيرة
+
+Pin results as cards with quick actions: أقوى أفعال · إضافة أرقام · نبرة رسمية/ودّية · تحميل DOCX/PDF.
+
+⸻
+
+3) Accessibility
+	•	<html dir="rtl" lang="ar-SA"> and Arabic punctuation ،.
+	•	Visible focus ring (e.g., outline:3px solid #5AE0B5).
+	•	Buttons for actions; links for navigation.
+	•	Ensure color contrast ≥ 4.5:1 on sand/white backgrounds.
+	•	Keyboard: Tab order follows visual order; Esc closes modals.
+
+⸻
+
+4) SEO / Social / PWA
+
+Add these to <head> of prerendered landing
+
+<title>Mehnaty AI | مهنتي</title>
+<meta name="description" content="Mehnaty AI | مدرّب مهني يعتمد على الذكاء الاصطناعي: مراجعة السيرة، تخصيص للأدوار، خطة مهارات ٣–٦ أشهر، وتجهيز للمقابلات—بالعربية.">
+<meta property="og:title" content="Mehnaty AI | مهنتي">
+<meta property="og:description" content="تطويرك المهني… بذكاءٍ اصطناعي. استخدم الذكاء الاصطناعي لتعزيز مسارك بالعربية.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/assets/social-card.png">
+<meta property="og:locale" content="ar_SA">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://mehnaty.io/">
+
+Robots & sitemap
+	•	/robots.txt with Sitemap: https://mehnaty.io/sitemap.xml.
+
+PWA
+	•	manifest.json → name: Mehnaty AI | مهنتي, dir:"rtl", lang:"ar", theme #0F5132, maskable icons, offline fallback page.
+
+⸻
+
+5) Security & reliability (server)
+
+// Express hardening
+app.disable('x-powered-by');
+app.use(helmet({ /* add CSP below */ }));
+app.use(rateLimit({ windowMs: 60_000, max: 60 }));
+// CSP: limit connect-src to your API + analytics; block framing; set HSTS via proxy.
+
+	•	CSP with strict script-src, connect-src to your LLM API.
+	•	Timeouts & retries on all AI calls; friendly Arabic error messages.
+	•	Upload safety: 5 MB limit, extension + magic-number checks (PDF/DOCX/JPG/PNG/WEBP), OCR in a worker thread.
+	•	Prompt-injection guard: wrap user docs (JD/CV) in a neutralizing envelope and never follow embedded instructions.
+	•	Validation: parse to a strict JSON schema (Zod), block invented degrees/dates, insert metric placeholders like “(أضف رقمًا تقريبيًا)”.
+
+⸻
+
+6) Performance
+	•	Inline critical CSS for hero; defer heavy libs (OCR, charts) until needed.
+	•	Preconnect to LLM API domain.
+	•	Serve SVG logo inline (no 404/blur), and compress assets (gzip/brotli).
+
+⸻
+
+7) E2E test plan (Playwright snippets)
+
+Happy path: JD tailoring → export
+
+test('JD tailoring', async ({ page }) => {
+  await page.goto('https://mehnaty.io');
+  await page.getByRole('button', { name: 'ابدأ الآن' }).click();
+  await page.getByRole('button', { name: 'تفصيل لوظيفة' }).click();
+  await page.getByPlaceholder('ألصق الوصف الوظيفي').fill('Customer Support JD ...');
+  await page.getByRole('button', { name: 'تحليل' }).click();
+  await expect(page.getByText('الفجوات')).toBeVisible();
+  await expect(page.getByText('نقاط محسّنة')).toBeVisible();
+  await page.getByRole('button', { name: 'تحميل DOCX' }).click();
+});
+
+Resume review → bullet rewrites
+
+test('Resume upload to bullets', async ({ page }) => {
+  await page.goto('https://mehnaty.io/home');
+  await page.getByText('مراجعة السيرة الذاتية').click();
+  await page.setInputFiles('input[type=file]', 'fixtures/resume.pdf');
+  await expect(page.getByText('تم الاستخراج')).toBeVisible();
+  await expect(page.getByText('نقاط أقوى')).toBeVisible();
+});
+
+Interview sim
+
+test('Interview', async ({ page }) => {
+  await page.goto('https://mehnaty.io/home');
+  await page.getByText('الاستعداد للمقابلة').click();
+  for (let i=0;i<3;i++){
+    await page.getByRole('textbox').fill('إجابة مختصرة ...');
+    await page.keyboard.press('Enter');
+  }
+  await expect(page.getByText('ملاحظات فورية')).toBeVisible();
+});
+
+
+⸻
+
+8) Observability
+	•	Sentry (FE/BE), pino logs (redact PII), healthcheck /api/health.
+	•	Track key events: hero_cta_click, upload_success, parse_success, jd_tailor_done, export_docx, interview_complete.
+
+⸻
+
+Summary of blocking items
+	1.	SSR/prerender the landing (content currently not visible to crawlers).  ￼
+	2.	Fix www → apex redirect (502 today).  ￼
+	3.	Brand/RTL consistency and focus/contrast polish.
+	4.	Upload/LLM safety (limits, validation, injection guard).
+
+If you want, I can draft a one-file index.html (prerendered hero + meta + OG) and a hardened Express snippet (Helmet+CSP+rate-limit) ready to drop into Replit.
