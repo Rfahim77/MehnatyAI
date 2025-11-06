@@ -9,15 +9,25 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, ArrowLeft } from "lucide-react";
+import { LogOut, ArrowLeft, User } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useLocation } from "wouter";
 
 export default function Home() {
-  const { t, dir } = useLanguage();
+  const { t, dir, language } = useLanguage();
   const { user, isLoading: authLoading, login, logout } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [sessionId, setSessionId] = useState<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
@@ -171,24 +181,52 @@ export default function Home() {
             {authLoading ? (
               <div className="h-9 w-20 bg-muted rounded-md animate-pulse" data-testid="auth-loading"></div>
             ) : user ? (
-              <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8" data-testid="user-avatar">
-                  {(user as any).profileImageUrl && <AvatarImage src={(user as any).profileImageUrl} />}
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {(user as any).email?.[0]?.toUpperCase() || (user as any).firstName?.[0]?.toUpperCase() || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={logout}
-                  data-testid="button-logout"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  {t("auth.logout")}
-                </Button>
-              </div>
-            ) : null}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0" data-testid="button-user-menu">
+                    <Avatar className="h-8 w-8">
+                      {(user as any).profileImageUrl && <AvatarImage src={(user as any).profileImageUrl} />}
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {(user as any).email?.[0]?.toUpperCase() || (user as any).firstName?.[0]?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {(user as any).firstName && (user as any).lastName
+                          ? `${(user as any).firstName} ${(user as any).lastName}`
+                          : language === "ar" ? "مستخدم" : "User"}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {(user as any).email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setLocation("/profile")} data-testid="menu-item-profile">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>{language === "ar" ? "الملف الشخصي" : "Profile"}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout} data-testid="menu-item-logout">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>{t("auth.logout")}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={login}
+                data-testid="button-signin-header"
+              >
+                {t("auth.login")}
+              </Button>
+            )}
           </div>
         </div>
       </header>
