@@ -299,8 +299,9 @@ export const KSA_COMMON_ROLES: KSARole[] = [
 // Database Tables (Drizzle ORM)
 
 // Auth session storage table (required for Replit Auth)
+// IMPORTANT: Table MUST be named "sessions" for connect-pg-simple to work with Replit Auth
 export const authSessions = pgTable(
-  "auth_sessions",
+  "sessions",
   {
     sid: varchar("sid").primaryKey(),
     sess: jsonb("sess").notNull(),
@@ -380,7 +381,7 @@ export type InsertUsageTracking = z.infer<typeof insertUsageTrackingSchema>;
 export type SelectUsageTracking = typeof usageTracking.$inferSelect;
 
 // Chat sessions (updated to link to userId)
-export const sessions = pgTable("sessions", {
+export const chatSessions = pgTable("chat_sessions", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).references(() => users.id, { onDelete: "set null" }),
   resumeJson: jsonb("resume_json").$type<ResumeJson>(),
@@ -397,7 +398,7 @@ export const sessions = pgTable("sessions", {
 
 export const messages = pgTable("messages", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  sessionId: varchar("session_id", { length: 255 }).notNull().references(() => sessions.id, { onDelete: "cascade" }),
+  sessionId: varchar("session_id", { length: 255 }).notNull().references(() => chatSessions.id, { onDelete: "cascade" }),
   role: varchar("role", { length: 20 }).notNull(),
   content: text("content").notNull(),
   timestamp: timestamp("timestamp").notNull().defaultNow()
@@ -408,7 +409,7 @@ export const messages = pgTable("messages", {
 
 export const cards = pgTable("cards", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  sessionId: varchar("session_id", { length: 255 }).notNull().references(() => sessions.id, { onDelete: "cascade" }),
+  sessionId: varchar("session_id", { length: 255 }).notNull().references(() => chatSessions.id, { onDelete: "cascade" }),
   messageId: varchar("message_id", { length: 255 }).references(() => messages.id, { onDelete: "cascade" }),
   type: varchar("type", { length: 50 }).notNull(),
   title: varchar("title", { length: 255 }).notNull(),
@@ -422,7 +423,7 @@ export const cards = pgTable("cards", {
 
 export const savedResumes = pgTable("saved_resumes", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  sessionId: varchar("session_id", { length: 255 }).notNull().references(() => sessions.id, { onDelete: "cascade" }),
+  sessionId: varchar("session_id", { length: 255 }).notNull().references(() => chatSessions.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 255 }).notNull(),
   resumeJson: jsonb("resume_json").notNull().$type<ResumeJson>(),
   version: integer("version").notNull().default(1),
@@ -434,14 +435,14 @@ export const savedResumes = pgTable("saved_resumes", {
 ]);
 
 // Insert schemas
-export const insertSessionSchema = createInsertSchema(sessions).omit({ createdAt: true, lastActivity: true });
+export const insertSessionSchema = createInsertSchema(chatSessions).omit({ createdAt: true, lastActivity: true });
 export const insertMessageSchema = createInsertSchema(messages).omit({ timestamp: true });
 export const insertCardSchema = createInsertSchema(cards).omit({ createdAt: true });
 export const insertSavedResumeSchema = createInsertSchema(savedResumes).omit({ createdAt: true, updatedAt: true });
 
 // Types
 export type InsertSession = z.infer<typeof insertSessionSchema>;
-export type SelectSession = typeof sessions.$inferSelect;
+export type SelectSession = typeof chatSessions.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type SelectMessage = typeof messages.$inferSelect;
 export type InsertCard = z.infer<typeof insertCardSchema>;

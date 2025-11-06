@@ -26,7 +26,7 @@ export function getSession() {
     conString: process.env.DATABASE_URL,
     createTableIfMissing: false,
     ttl: sessionTtl,
-    tableName: "auth_sessions",
+    tableName: "sessions",
   });
   return session({
     secret: process.env.SESSION_SECRET!,
@@ -36,7 +36,7 @@ export function getSession() {
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: sessionTtl,
     },
   });

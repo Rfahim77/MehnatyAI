@@ -2,7 +2,7 @@ import {
   type Session, 
   type Card, 
   type ChatMessage, 
-  sessions, 
+  chatSessions, 
   messages, 
   cards, 
   savedResumes,
@@ -63,7 +63,7 @@ export interface IStorage {
 
 export class PostgresStorage implements IStorage {
   async getSession(id: string): Promise<Session | undefined> {
-    const [session] = await db.select().from(sessions).where(eq(sessions.id, id));
+    const [session] = await db.select().from(chatSessions).where(eq(chatSessions.id, id));
     if (!session) return undefined;
 
     const sessionMessages = await this.getSessionMessages(id);
@@ -84,7 +84,7 @@ export class PostgresStorage implements IStorage {
   }
 
   async createSession(session: Session): Promise<Session> {
-    await db.insert(sessions).values({
+    await db.insert(chatSessions).values({
       id: session.id,
       resumeJson: session.resumeJson ?? null,
       tone: session.tone ?? null,
@@ -103,9 +103,9 @@ export class PostgresStorage implements IStorage {
     if (updates.jdText !== undefined) updateData.jdText = updates.jdText ?? null;
     if (updates.language !== undefined) updateData.language = updates.language;
 
-    await db.update(sessions)
+    await db.update(chatSessions)
       .set(updateData)
-      .where(eq(sessions.id, id));
+      .where(eq(chatSessions.id, id));
 
     return this.getSession(id);
   }
@@ -122,7 +122,7 @@ export class PostgresStorage implements IStorage {
     };
 
     await db.insert(cards).values(insertData);
-    await db.update(sessions).set({ lastActivity: new Date() }).where(eq(sessions.id, sessionId));
+    await db.update(chatSessions).set({ lastActivity: new Date() }).where(eq(chatSessions.id, sessionId));
   }
 
   async addMessageToSession(sessionId: string, message: ChatMessage): Promise<void> {
@@ -151,7 +151,7 @@ export class PostgresStorage implements IStorage {
         }
       }
 
-      await db.update(sessions).set({ lastActivity: new Date() }).where(eq(sessions.id, sessionId));
+      await db.update(chatSessions).set({ lastActivity: new Date() }).where(eq(chatSessions.id, sessionId));
     } catch (error) {
       console.error(`Error adding message to session ${sessionId}:`, error);
       throw error;
@@ -232,19 +232,32 @@ export class PostgresStorage implements IStorage {
   async linkSessionToUser(sessionId: string, userId: string): Promise<void> {
     // Link the session to the user (migrate anonymous session to authenticated user)
     await db
-      .update(sessions)
+      .update(chatSessions)
       .set({ userId })
-      .where(eq(sessions.id, sessionId));
+      .where(eq(chatSessions.id, sessionId));
   }
 
   async getUserSessions(userId: string): Promise<Session[]> {
     // Get all sessions linked to this user, ordered by last activity (most recent first)
     const userSessions = await db
       .select()
-      .from(sessions)
-      .where(eq(sessions.userId, userId))
-      .orderBy(desc(sessions.lastActivity));
-    return userSessions;
+      .from(chatSessions)
+      .where(eq(chatSessions.userId, userId))
+      .orderBy(desc(chatSessions.lastActivity));
+    
+    // Map to Session type with empty cards and messages arrays
+    return userSessions.map(s => ({
+      id: s.id,
+      resumeJson: s.resumeJson ?? undefined,
+      tone: s.tone ?? undefined,
+      targetJob: s.targetJob ?? undefined,
+      jdText: s.jdText ?? undefined,
+      cards: [],
+      messages: [],
+      language: s.language as "ar" | "en",
+      createdAt: s.createdAt.getTime(),
+      lastActivity: s.lastActivity.getTime()
+    }));
   }
 
   // User operations (required for Replit Auth)
