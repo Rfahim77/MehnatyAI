@@ -4,7 +4,7 @@ export const translations = {
   ar: {
     // App title
     appTitle: "مهنتي | Mehnaty AI",
-    appSubtitle: "مساعدك في التطوير الوظيفي بالذكاء الاصطناعي — مراجعة سيرتك، خطط وظيفية، وتدريب على المقابلات بالعربية",
+    appSubtitle: "مساعدك في التطوير الوظيفي بالذكاء الاصطناعي — مراجعة سيرتك، خطط وظيفية، وتدريب على المقابلات بالعربية",
     
     // Pathway options
     pathways: {
@@ -89,10 +89,10 @@ export const translations = {
       login: "سجّل الدخول",
       signUpPrompt: "لا تملك حسابًا؟",
       signUpLink: "أنشئ حسابًا مجانًا",
-      freeAccess: "مجاني تمامًا — جميع المزايا متاحة بدون حدود",
+      freeAccess: "مجاني تمامًا — جميع المزايا متاحة بدون حدود",
       hero: {
         title: "مدرّب للتطوير الوظيفي يعتمد على الذكاء الاصطناعي",
-        supportingLine: "استخدم الذكاء الاصطناعي لتعزيز مسارك الوظيفي: نراجع سيرتك، نخصّصها للوظيفة، ونبني خطة مهارات ٣–٦ أشهر — بالعربية",
+        supportingLine: "استخدم الذكاء الاصطناعي لتعزيز مسارك الوظيفي: نراجع سيرتك، نخصّصها للوظيفة، ونبني خطة مهارات ٣–٦ أشهر — بالعربية",
         cta: "ابدأ الآن"
       },
       features: {
@@ -253,7 +253,7 @@ export const translations = {
       freeAccess: "Access is currently free.",
       hero: {
         title: "مهنتي | Mehnaty AI",
-        supportingLine: "Precise reviews, actionable plans, and smart interview prep — in Arabic, powered by AI.",
+        supportingLine: "Precise reviews, actionable plans, and smart interview prep — in Arabic, powered by AI.",
         cta: "Start Now"
       },
       features: {
