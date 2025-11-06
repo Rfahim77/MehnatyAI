@@ -40,10 +40,12 @@ export interface IStorage {
   getSessionCards(sessionId: string): Promise<Card[]>;
   saveResume(sessionId: string, name: string, resumeJson: any, targetRole?: string): Promise<void>;
   getSavedResumes(sessionId: string): Promise<any[]>;
+  linkSessionToUser(sessionId: string, userId: string): Promise<void>;
   
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUserProfile(userId: string, profileData: Partial<User>): Promise<User | undefined>;
   
   // Subscription operations
   getUserSubscription(userId: string): Promise<SelectSubscription | undefined>;
@@ -226,6 +228,14 @@ export class PostgresStorage implements IStorage {
     }));
   }
 
+  async linkSessionToUser(sessionId: string, userId: string): Promise<void> {
+    // Link the session to the user (migrate anonymous session to authenticated user)
+    await db
+      .update(sessions)
+      .set({ userId })
+      .where(eq(sessions.id, sessionId));
+  }
+
   // User operations (required for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -267,6 +277,18 @@ export class PostgresStorage implements IStorage {
     }
     
     return user;
+  }
+
+  async updateUserProfile(userId: string, profileData: Partial<User>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        ...profileData,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
   }
 
   // Subscription operations

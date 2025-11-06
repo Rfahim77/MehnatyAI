@@ -77,6 +77,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user profile (requires authentication)
+  app.get('/api/auth/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      // Return only profile-relevant fields
+      res.json({
+        phone: user.phone,
+        linkedinUrl: user.linkedinUrl,
+        currentRole: user.currentRole,
+        yearsExperience: user.yearsExperience,
+        industry: user.industry,
+        skills: user.skills,
+      });
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      res.status(500).json({ message: "Failed to fetch profile" });
+    }
+  });
+
+  // Update user profile (requires authentication)
+  app.post('/api/auth/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { phone, linkedinUrl, currentRole, yearsExperience, industry, skills } = req.body;
+
+      // Update user profile fields
+      await storage.updateUserProfile(userId, {
+        phone,
+        linkedinUrl,
+        currentRole,
+        yearsExperience,
+        industry,
+        skills,
+      });
+
+      res.json({ success: true, message: "Profile updated successfully" });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Link session to authenticated user (session migration)
+  app.post('/api/auth/link-session', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { sessionId } = req.body;
+
+      if (!sessionId) {
+        return res.status(400).json({ message: "Session ID is required" });
+      }
+
+      // Link the guest session to the authenticated user
+      await storage.linkSessionToUser(sessionId, userId);
+
+      res.json({ success: true, message: "Session linked successfully" });
+    } catch (error) {
+      console.error("Error linking session:", error);
+      res.status(500).json({ message: "Failed to link session" });
+    }
+  });
+
   // Main chat endpoint (authentication disabled for now)
   app.post("/api/chat", async (req, res) => {
     try {
