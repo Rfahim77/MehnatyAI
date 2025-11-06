@@ -1,0 +1,6 @@
+# robots.txt for Mehnaty AI
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://mehnaty.io/sitemap.xml

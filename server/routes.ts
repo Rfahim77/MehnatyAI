@@ -44,18 +44,158 @@ import {
 } from "./validation";
 import { rateLimiter, getRateLimitErrorMessage } from "./rateLimit";
 import { sanitizeInput, sanitizeResumeJson, sanitizeJdText } from "./sanitization";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import UAParser from "ua-parser-js";
 
-// Configure multer for file uploads
+// Configure multer for file uploads with enhanced safety
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB
+    fileSize: 5 * 1024 * 1024, // 5MB limit as recommended
+  },
+  fileFilter: (req, file, cb) => {
+    // Allow only specific file types
+    const allowedMimes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/png',
+      'image/webp'
+    ];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('نوع الملف غير مدعوم. يُرجى رفع PDF أو DOCX أو صورة فقط.'));
+    }
   },
 });
 
+// Crawler detection
+function isCrawler(userAgent: string): boolean {
+  if (!userAgent) return false;
+  const crawlerPatterns = [
+    'googlebot', 'bingbot', 'slurp', 'duckduckbot', 'baiduspider',
+    'yandexbot', 'facebookexternalhit', 'twitterbot', 'linkedinbot',
+    'whatsapp', 'telegrambot', 'applebot', 'discordbot'
+  ];
+  const ua = userAgent.toLowerCase();
+  return crawlerPatterns.some(pattern => ua.includes(pattern));
+}
+
+// Generate prerendered HTML for crawlers
+function getPrerenderedLanding(): string {
+  return `<!DOCTYPE html>
+<html lang="ar-SA" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Mehnaty AI | مدرّب مهني يعتمد على الذكاء الاصطناعي: مراجعة السيرة، تخصيص للأدوار، خطة مهارات ٣–٦ أشهر، وتجهيز للمقابلات—بالعربية" />
+  <meta name="theme-color" content="#0F5132" />
+  
+  <!-- Open Graph / Social Media -->
+  <meta property="og:title" content="Mehnaty AI | مهنتي" />
+  <meta property="og:description" content="مدرّب مهني يعتمد على الذكاء الاصطناعي. استخدم الذكاء الاصطناعي لتعزيز مسارك بالعربية" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="ar_SA" />
+  <meta property="og:image" content="https://mehnaty.io/icons/icon-512x512.png" />
+  <meta property="og:url" content="https://mehnaty.io/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Mehnaty AI | مهنتي" />
+  <meta name="twitter:description" content="مدرّب مهني يعتمد على الذكاء الاصطناعي" />
+  <meta name="twitter:image" content="https://mehnaty.io/icons/icon-512x512.png" />
+  
+  <link rel="canonical" href="https://mehnaty.io/" />
+  <link rel="manifest" href="/manifest.json" />
+  
+  <title>Mehnaty AI | مهنتي - مدرّب مهني يعتمد على الذكاء الاصطناعي</title>
+</head>
+<body>
+  <main>
+    <h1>مهنتي | <bdi dir="ltr">Mehnaty AI</bdi></h1>
+    <h2>مدرّب مهني يعتمد على الذكاء الاصطناعي</h2>
+    <p>استخدم الذكاء الاصطناعي لتعزيز مسارك: نراجع سيرتك، نخصّصها للوظيفة، ونبني خطة مهارات ٣–٦ أشهر — بالعربية</p>
+    
+    <h3>المسارات المهنية المتوفرة:</h3>
+    <ul>
+      <li>مراجعة السيرة الذاتية - تحليل شامل مع نقاط التحسين</li>
+      <li>تفصيل لوظيفة - تخصيص سيرتك لوصف وظيفي محدد</li>
+      <li>تدريب على المقابلة - محاكاة مقابلات مع أسئلة واقعية</li>
+      <li>خطة المهارات - خطة عمل ٣–٦ أشهر لسد فجوات المهارات</li>
+      <li>إنشاء سيرة ذاتية - بناء سيرة احترافية من الصفر</li>
+      <li>رسالة تغطية - كتابة رسالة تغطية مخصصة</li>
+      <li>تحليل فجوة المهارات - تقييم مهاراتك مقابل متطلبات السوق</li>
+      <li>التخطيط المهني - استراتيجية طويلة المدى لمسارك المهني</li>
+    </ul>
+    
+    <p><strong>مجاني تمامًا</strong> - جميع المزايا متاحة للجميع بدون حدود</p>
+    
+    <a href="/home">ابدأ الآن كضيف</a>
+  </main>
+</body>
+</html>`;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Disable x-powered-by header
+  app.disable('x-powered-by');
+  
+  // www → apex redirect (must be first)
+  app.use((req, res, next) => {
+    const host = req.get('host');
+    if (host && host.startsWith('www.')) {
+      const newHost = host.replace('www.', '');
+      return res.redirect(301, `${req.protocol}://${newHost}${req.originalUrl}`);
+    }
+    next();
+  });
+  
+  // Security hardening with helmet
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https:", "blob:"],
+        connectSrc: ["'self'", "https://generativelanguage.googleapis.com", "wss://*"],
+        frameSrc: ["'none'"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+      },
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  }));
+  
+  // Global rate limiting
+  const globalLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 60, // 60 requests per minute
+    message: 'لقد تجاوزت الحد المسموح من الطلبات. يُرجى المحاولة بعد قليل.',
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+  
+  app.use('/api/', globalLimiter);
+  
   // Setup Replit Auth
   await setupAuth(app);
+  
+  // Crawler detection and prerendered landing
+  app.get('/', (req, res, next) => {
+    const userAgent = req.get('user-agent') || '';
+    if (isCrawler(userAgent)) {
+      return res.status(200).set({ 'Content-Type': 'text/html' }).send(getPrerenderedLanding());
+    }
+    next();
+  });
 
   // Health check endpoint
   app.get("/api/health", (req, res) => {
@@ -153,8 +293,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true, 
         sessions: sessions.map(s => ({
           id: s.id,
-          createdAt: s.createdAt.getTime(),
-          lastActivity: s.lastActivity.getTime()
+          createdAt: s.createdAt,
+          lastActivity: s.lastActivity
         }))
       });
     } catch (error) {
@@ -182,7 +322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: m.id,
           role: m.role,
           content: m.content,
-          timestamp: m.timestamp.getTime()
+          timestamp: m.timestamp
         })),
         cards 
       });
@@ -503,24 +643,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "لم يتم رفع ملف" });
       }
 
-      // Validate file size (10MB max)
-      const maxSize = 10 * 1024 * 1024;
+      // Validate file size (5MB max as per security recommendation)
+      const maxSize = 5 * 1024 * 1024;
       if (req.file.size > maxSize) {
-        return res.status(400).json({ error: "حجم الملف كبير جداً. الحد الأقصى 10 ميجابايت" });
+        return res.status(400).json({ error: "حجم الملف كبير جداً. الحد الأقصى ٥ ميجابايت" });
       }
 
-      // Validate MIME type
-      const allowedMimeTypes = [
-        "application/pdf",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "image/png",
-        "image/jpeg",
-        "image/jpg",
-      ];
+      // Magic-number validation: Detect actual file type from content
+      const { fileTypeFromBuffer } = await import('file-type');
+      const detectedType = await fileTypeFromBuffer(req.file.buffer);
+      
+      // Allowed file types with their magic number signatures
+      const allowedTypes = new Map([
+        ['application/pdf', ['pdf']],
+        ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', ['docx']],
+        ['image/png', ['png']],
+        ['image/jpeg', ['jpg', 'jpeg']],
+        ['image/webp', ['webp']],
+      ]);
 
-      if (!allowedMimeTypes.includes(req.file.mimetype)) {
+      // Validate that file has a detectable signature
+      if (!detectedType) {
         return res.status(400).json({
-          error: "نوع الملف غير مدعوم. الأنواع المسموحة: PDF, DOCX, PNG, JPEG, JPG",
+          error: "لا يمكن التعرف على نوع الملف. الملف قد يكون تالفاً أو فارغاً",
+        });
+      }
+
+      // Find the MIME type that matches the detected file signature
+      let detectedMimeType: string | null = null;
+      for (const [mime, extensions] of Array.from(allowedTypes.entries())) {
+        if (extensions.includes(detectedType.ext)) {
+          detectedMimeType = mime;
+          break;
+        }
+      }
+
+      // Reject if detected file type is not in allowed list
+      if (!detectedMimeType) {
+        return res.status(400).json({
+          error: `نوع الملف غير مدعوم (تم الكشف عن: ${detectedType.ext}). الأنواع المسموحة: PDF، DOCX، PNG، JPEG، WEBP`,
+        });
+      }
+
+      // CRITICAL: Ensure declared MIME matches detected MIME to prevent spoofing
+      if (req.file.mimetype !== detectedMimeType) {
+        return res.status(400).json({
+          error: `نوع الملف المُعلن (${req.file.mimetype}) لا يطابق المحتوى الفعلي (${detectedMimeType}). تم رفض الملف لأسباب أمنية`,
         });
       }
 
