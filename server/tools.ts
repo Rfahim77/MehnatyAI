@@ -25,7 +25,8 @@ export async function extractText(fileBuffer: Buffer, mimeType: string): Promise
     if (mimeType === "application/pdf") {
       try {
         // Lazy-load pdf-parse only when needed
-        const pdfParse = (await import("pdf-parse")).default;
+        const pdfParseModule = await import("pdf-parse");
+        const pdfParse = pdfParseModule.default || pdfParseModule;
         const result = await pdfParse(fileBuffer);
         
         if (!result.text || result.text.trim().length === 0) {
