@@ -45,7 +45,10 @@ The application features a bilingual Arabic/English interface with full RTL/LTR 
   - Guest users: sessionId stored in localStorage, temporary data
   - Authenticated users: sessions linked to userId in database, permanent storage
   - Session migration: `/api/auth/link-session` endpoint automatically links guest sessions to user accounts upon sign-in
-  - Frontend migration logic: tracks per-session migration status in localStorage to ensure each session is linked exactly once
+  - Frontend migration logic: Uses `syncedSessionKey` state to track completed syncs per user+session combination
+  - Performance optimization: Migration effect runs once per unique user+session (prevents continuous re-firing on message changes)
+  - Data flow: localStorage loads → discover existing sessions → link current session → sync with backend (backend is authoritative)
+  - Backend as source of truth: Always overwrites local state with backend data after authentication
 - **API Endpoints**: 
   - `POST /api/chat` for conversational interactions
   - `POST /api/tools/*` for file processing, resume parsing, bullet rewriting, JD scoring, and export
@@ -53,6 +56,8 @@ The application features a bilingual Arabic/English interface with full RTL/LTR 
   - `GET /api/auth/profile` for fetching user profile
   - `POST /api/auth/profile` for updating user profile
   - `POST /api/auth/link-session` for migrating guest sessions to authenticated users
+  - `GET /api/auth/sessions` for discovering user's existing sessions (auth-required)
+  - `GET /api/sessions/:sessionId` for fetching session data (messages, cards) for cross-device sync
 - **WebSocket Endpoint**: `ws://localhost:5000/ws/collaborate` for real-time collaborative editing with room-based collaboration and auto-reconnection.
 
 ## External Dependencies
