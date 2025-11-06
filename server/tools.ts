@@ -1,9 +1,9 @@
 // Lazy-loaded heavy dependencies (loaded only when needed)
-// - pdf-parse: Only loaded when parsing PDF files
-// - mammoth: Only loaded when parsing DOCX files  
-// - tesseract.js: Only loaded when performing OCR on images
 // - docx: Only loaded when exporting to DOCX format
 // - puppeteer: Only loaded when exporting to PDF format
+//
+// NOTE: Text extraction from PDF/DOCX/images is now handled by Gemini AI directly
+// (see extractTextWithAI function) - no more pdf-parse, mammoth, or tesseract dependencies!
 
 import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
@@ -82,99 +82,6 @@ export async function extractTextWithAI(fileBuffer: Buffer, mimeType: string): P
   }
 }
 
-// Legacy text extraction function (deprecated - kept for backwards compatibility)
-export async function extractText(fileBuffer: Buffer, mimeType: string): Promise<{
-  text: string;
-  meta: { pages?: number; fileType: string; language?: string };
-}> {
-  try {
-    if (mimeType === "application/pdf") {
-      try {
-        // Lazy-load pdf-parse only when needed
-        const pdfParseModule = await import("pdf-parse");
-        const pdfParse = pdfParseModule.default || pdfParseModule;
-        const result = await pdfParse(fileBuffer);
-        
-        if (!result.text || result.text.trim().length === 0) {
-          throw new Error("الملف لا يحتوي على نص قابل للاستخراج");
-        }
-        
-        return {
-          text: result.text.trim(),
-          meta: {
-            pages: result.numpages,
-            fileType: "pdf",
-          },
-        };
-      } catch (pdfError: any) {
-        console.error("PDF parsing error:", pdfError);
-        if (pdfError.message?.includes("Invalid PDF") || pdfError.name === "InvalidPDFException") {
-          throw new Error("ملف PDF غير صالح. يرجى التأكد من أن الملف ليس تالفًا");
-        }
-        if (pdfError.message?.includes("الملف لا يحتوي على نص")) {
-          throw pdfError;
-        }
-        throw new Error("فشل قراءة ملف PDF. يرجى التأكد من صحة الملف");
-      }
-    } else if (
-      mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    ) {
-      try {
-        // Lazy-load mammoth only when needed
-        const mammoth = (await import("mammoth")).default;
-        const result = await mammoth.extractRawText({ buffer: fileBuffer });
-        
-        if (!result.value || result.value.trim().length === 0) {
-          throw new Error("الملف لا يحتوي على نص قابل للاستخراج");
-        }
-        
-        return {
-          text: result.value.trim(),
-          meta: {
-            fileType: "docx",
-          },
-        };
-      } catch (docxError: any) {
-        console.error("DOCX parsing error:", docxError);
-        if (docxError.message?.includes("الملف لا يحتوي على نص")) {
-          throw docxError;
-        }
-        throw new Error("فشل قراءة ملف DOCX. يرجى التأكد من صحة الملف");
-      }
-    } else if (mimeType.startsWith("image/")) {
-      try {
-        // Lazy-load Tesseract.js only when needed
-        const Tesseract = (await import("tesseract.js")).default;
-        const result = await Tesseract.recognize(fileBuffer, "ara+eng", {
-          logger: (m) => console.log(m),
-        });
-        
-        if (!result.data.text || result.data.text.trim().length === 0) {
-          throw new Error("لم يتم العثور على نص في الصورة. يرجى التأكد من وضوح النص في الصورة");
-        }
-        
-        return {
-          text: result.data.text.trim(),
-          meta: {
-            fileType: "image",
-            language: result.data.text.match(/[\u0600-\u06FF]/) ? "ara+eng" : "eng",
-          },
-        };
-      } catch (ocrError: any) {
-        console.error("OCR error:", ocrError);
-        if (ocrError.message?.includes("لم يتم العثور على نص")) {
-          throw ocrError;
-        }
-        throw new Error("فشل قراءة النص من الصورة. يرجى استخدام صورة واضحة");
-      }
-    } else {
-      throw new Error("نوع الملف غير مدعوم. الرجاء استخدام PDF أو DOCX أو صورة");
-    }
-  } catch (error: any) {
-    console.error("Extract text error:", error);
-    throw error;
-  }
-}
 
 export async function parseResumeJson(text: string): Promise<{
   resumeJson?: ResumeJson;

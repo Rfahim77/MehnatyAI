@@ -6,7 +6,6 @@ import { storage } from "./storage";
 import { callLLMWithRetry, type LLMMessage } from "./llmClient";
 import { SYSTEM_PROMPT, getChatPrompt } from "./prompts";
 import {
-  extractText,
   parseResumeJson,
   rewriteBulletsAr,
   recommendPathKsa,
