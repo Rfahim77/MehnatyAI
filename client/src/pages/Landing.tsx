@@ -90,19 +90,19 @@ export default function Landing() {
               <ul className="text-sm space-y-1 text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  <span>{language === "ar" ? "احفظ سيرتك الذاتية على جميع الأجهزة" : "Save your resume across all devices"}</span>
+                  <span>{language === "ar" ? "احفظ تقدّمك ومحادثاتك على جميع الأجهزة." : "Save your progress and conversations across all devices"}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  <span>{language === "ar" ? "وصول دائم لمحادثاتك المهنية" : "Access your career conversations anytime"}</span>
+                  <span>{language === "ar" ? "وصول متزامن عبر الجوال والويب." : "Synced access via mobile and web"}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  <span>{language === "ar" ? "تصدير المستندات إلى البريد الإلكتروني" : "Export documents to email"}</span>
+                  <span>{language === "ar" ? "تصدير السيرة والملفات بصيغة DOCX/PDF أو إلى بريدك." : "Export resume and files as DOCX/PDF or to your email"}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  <span>{language === "ar" ? "لن تفقد تقدمك أبداً" : "Never lose your progress"}</span>
+                  <span>{language === "ar" ? "استئناف من حيث توقفت — في أي وقت." : "Resume from where you left off — anytime"}</span>
                 </li>
               </ul>
             </div>
