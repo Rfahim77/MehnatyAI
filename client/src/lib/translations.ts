@@ -101,7 +101,7 @@ export const translations = {
         careerChat: "استشارة مهنية",
         careerChatDesc: "استشارات مهنية مخصصة",
         futurePlan: "التخطيط للمستقبل",
-        futurePlanDesc: "خطة مهنية لمدة 3-6 أشهر",
+        futurePlanDesc: "خطة مهنية لمدة ٣–٦ أشهر",
         tailorJob: "مواءمة السيرة الذاتية للوظيفة",
         tailorJobDesc: "مطابقة السيرة مع متطلبات الوظيفة",
         interview: "الاستعداد للمقابلة",
@@ -164,7 +164,7 @@ export const translations = {
   
   en: {
     // App title
-    appTitle: "مهنتي | Mihnaty AI",
+    appTitle: "مهنتي | Mehnaty AI",
     appSubtitle: "Your AI Career Copilot - Resume reviews, career plans, and interview prep in Arabic",
     
     // Pathway options
@@ -179,7 +179,7 @@ export const translations = {
       },
       future_plan: {
         title: "Future Planning",
-        description: "3-6 month career roadmap with market insights"
+        description: "3–6 month career roadmap with market insights"
       },
       tailor_to_job: {
         title: "Tailor to Job",
@@ -252,7 +252,7 @@ export const translations = {
       signUpLink: "Create a free account",
       freeAccess: "Access is currently free.",
       hero: {
-        title: "مهنتي | Mihnaty AI",
+        title: "مهنتي | Mehnaty AI",
         supportingLine: "Precise reviews, actionable plans, and smart interview prep — in Arabic, powered by AI.",
         cta: "Start Now"
       },
@@ -262,7 +262,7 @@ export const translations = {
         careerChat: "Career Chat",
         careerChatDesc: "Personalized career consultations",
         futurePlan: "Future Planning",
-        futurePlanDesc: "3-6 month career roadmap",
+        futurePlanDesc: "3–6 month career roadmap",
         tailorJob: "Tailor to Job",
         tailorJobDesc: "Match resume to job requirements",
         interview: "Interview Prep",
