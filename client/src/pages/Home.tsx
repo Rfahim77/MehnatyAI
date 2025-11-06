@@ -28,21 +28,23 @@ export default function Home() {
   const { user, isLoading: authLoading, login, logout } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [sessionId, setSessionId] = useState<string>("");
+  
+  // Initialize sessionId synchronously from localStorage to avoid race conditions
+  const [sessionId, setSessionId] = useState<string>(() => {
+    let storedSessionId = localStorage.getItem("career_agent_session_id");
+    if (!storedSessionId) {
+      storedSessionId = uuidv4();
+      localStorage.setItem("career_agent_session_id", storedSessionId);
+    }
+    return storedSessionId;
+  });
+  
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [cards, setCards] = useState<Card[]>([]);
   const [showOptions, setShowOptions] = useState(true);
   const [uploadedResume, setUploadedResume] = useState<ResumeJson | null>(null);
 
   useEffect(() => {
-    // Get or create session ID
-    let storedSessionId = localStorage.getItem("career_agent_session_id");
-    if (!storedSessionId) {
-      storedSessionId = uuidv4();
-      localStorage.setItem("career_agent_session_id", storedSessionId);
-    }
-    setSessionId(storedSessionId);
-
     // Load persisted messages and cards
     const storedMessages = localStorage.getItem("career_agent_messages");
     const storedCards = localStorage.getItem("career_agent_cards");
@@ -53,6 +55,29 @@ export default function Home() {
       setCards(JSON.parse(storedCards));
     }
   }, []);
+
+  // Session migration: Link guest session to authenticated user
+  useEffect(() => {
+    const migrateSession = async () => {
+      if (user && sessionId && !authLoading) {
+        // Track migration per session (not per user) to handle multiple sessions
+        const migrationKey = `session_migrated_${sessionId}`;
+        const alreadyMigrated = localStorage.getItem(migrationKey);
+        
+        if (!alreadyMigrated) {
+          try {
+            await apiRequest("POST", "/api/auth/link-session", { sessionId });
+            localStorage.setItem(migrationKey, "true");
+            console.log("Session migrated successfully for sessionId:", sessionId);
+          } catch (error) {
+            console.error("Failed to migrate session:", error);
+          }
+        }
+      }
+    };
+
+    migrateSession();
+  }, [user, sessionId, authLoading]);
 
   useEffect(() => {
     if (messages.length > 0) {
