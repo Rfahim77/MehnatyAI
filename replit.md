@@ -1,5 +1,8 @@
 # Mehnaty AI | مهنتي
 
+## Recent Changes
+- **Auth Implementation Reset (Nov 6, 2025)**: Completely reset Replit Auth from blueprint - deleted old implementation and re-added fresh from `blueprint:javascript_log_in_with_replit`. Cookie security properly configured for development environment (`secure: false` in dev, `true` in production). All auth endpoints tested and working correctly.
+
 ## Overview
 This project is a conversational AI career assistant tailored for job seekers in the Arabic-speaking world and the broader MENA region. It provides a bilingual Arabic/English interface with full right-to-left (RTL) and left-to-right (LTR) support. The application offers 8 specialized career pathways designed to assist users with resume building, job applications, career planning, and interview preparation. The business vision is to provide a comprehensive, accessible, and free career guidance tool to professionals in the MENA region, leveraging AI to overcome common job search hurdles.
 

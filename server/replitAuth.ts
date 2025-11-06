@@ -1,4 +1,5 @@
 // Replit Auth integration using OpenID Connect
+// Code from blueprint:javascript_log_in_with_replit
 import * as client from "openid-client";
 import { Strategy, type VerifyFunction } from "openid-client/passport";
 
@@ -76,18 +77,10 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    try {
-      console.log("[AUTH] Verify function called");
-      console.log("[AUTH] Token claims:", tokens.claims());
-      const user = {};
-      updateUserSession(user, tokens);
-      await upsertUser(tokens.claims());
-      console.log("[AUTH] User upserted successfully");
-      verified(null, user);
-    } catch (error) {
-      console.error("[AUTH] Verify error:", error);
-      verified(error as Error);
-    }
+    const user = {};
+    updateUserSession(user, tokens);
+    await upsertUser(tokens.claims());
+    verified(null, user);
   };
 
   // Keep track of registered strategies
@@ -115,8 +108,6 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    console.log("[AUTH] Login route hit - Hostname:", req.hostname);
-    console.log("[AUTH] Session ID:", req.sessionID);
     ensureStrategy(req.hostname);
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
@@ -125,8 +116,6 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/callback", (req, res, next) => {
-    console.log("[AUTH] Callback hit - Query:", req.query);
-    console.log("[AUTH] Session before auth:", req.session);
     ensureStrategy(req.hostname);
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
@@ -150,7 +139,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user.expires_at) {
-    return res.status(401).json({ message: "يجب تسجيل الدخول للوصول إلى هذه الخدمة" });
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   const now = Math.floor(Date.now() / 1000);
@@ -160,7 +149,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   const refreshToken = user.refresh_token;
   if (!refreshToken) {
-    res.status(401).json({ message: "يجب تسجيل الدخول للوصول إلى هذه الخدمة" });
+    res.status(401).json({ message: "Unauthorized" });
     return;
   }
 
@@ -170,7 +159,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     updateUserSession(user, tokenResponse);
     return next();
   } catch (error) {
-    res.status(401).json({ message: "يجب تسجيل الدخول للوصول إلى هذه الخدمة" });
+    res.status(401).json({ message: "Unauthorized" });
     return;
   }
 };
