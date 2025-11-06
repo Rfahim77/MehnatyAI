@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/Logo";
 import { useLocation } from "wouter";
+import { analytics } from "@/lib/analytics";
 
 export default function Landing() {
   const { t, dir, language } = useLanguage();
@@ -12,14 +13,26 @@ export default function Landing() {
   const [, setLocation] = useLocation();
 
   const handleContinueAsGuest = () => {
+    // Track hero CTA click
+    analytics.track("hero_cta_click", { action: "continue_as_guest" });
     // Navigate to Home without authentication - fully accessible
     setLocation("/home");
   };
 
+  const handleChipClick = (pathway: string) => {
+    // Track pathway chip selection
+    analytics.track("chip_select", { pathway });
+    setLocation("/home");
+  };
+
   const handleSignIn = async () => {
+    analytics.track("signin_click");
     try {
+      analytics.track("auth_started");
       await login();
+      analytics.track("auth_success");
     } catch (error) {
+      analytics.track("auth_failed", { error: String(error) });
       console.error("Login failed:", error);
     }
   };
@@ -124,7 +137,7 @@ export default function Landing() {
               <Badge 
                 variant="secondary"
                 className="cursor-pointer hover-elevate active-elevate-2"
-                onClick={handleContinueAsGuest}
+                onClick={() => handleChipClick("resume_review")}
                 data-testid="chip-resume-review"
               >
                 {t("pathways.resume_review.title")}
@@ -132,7 +145,7 @@ export default function Landing() {
               <Badge 
                 variant="secondary"
                 className="cursor-pointer hover-elevate active-elevate-2"
-                onClick={handleContinueAsGuest}
+                onClick={() => handleChipClick("tailor_to_job")}
                 data-testid="chip-tailor-job"
               >
                 {t("pathways.tailor_to_job.title")}
@@ -140,7 +153,7 @@ export default function Landing() {
               <Badge 
                 variant="secondary"
                 className="cursor-pointer hover-elevate active-elevate-2"
-                onClick={handleContinueAsGuest}
+                onClick={() => handleChipClick("interview")}
                 data-testid="chip-interview"
               >
                 {t("pathways.interview.title")}
@@ -148,7 +161,7 @@ export default function Landing() {
               <Badge 
                 variant="secondary"
                 className="cursor-pointer hover-elevate active-elevate-2"
-                onClick={handleContinueAsGuest}
+                onClick={() => handleChipClick("future_plan")}
                 data-testid="chip-future-plan"
               >
                 {t("pathways.future_plan.title")}
@@ -156,7 +169,7 @@ export default function Landing() {
               <Badge 
                 variant="secondary"
                 className="cursor-pointer hover-elevate active-elevate-2"
-                onClick={handleContinueAsGuest}
+                onClick={() => handleChipClick("build_from_zero")}
                 data-testid="chip-build-from-zero"
               >
                 {t("pathways.build_from_zero.title")}
