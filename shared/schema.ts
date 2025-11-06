@@ -313,7 +313,7 @@ export const authSessions = pgTable(
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
-  phone: varchar("phone").unique(), // Phone number for OTP login
+  phone: varchar("phone"), // Phone number for OTP login (optional, no unique constraint)
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
