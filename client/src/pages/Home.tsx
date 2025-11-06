@@ -43,6 +43,8 @@ export default function Home() {
   const [cards, setCards] = useState<Card[]>([]);
   const [showOptions, setShowOptions] = useState(true);
   const [uploadedResume, setUploadedResume] = useState<ResumeJson | null>(null);
+  const [localStorageLoaded, setLocalStorageLoaded] = useState(false);
+  const [syncedSessionKey, setSyncedSessionKey] = useState<string | null>(null);
 
   useEffect(() => {
     // Load persisted messages and cards
@@ -54,30 +56,101 @@ export default function Home() {
     if (storedCards) {
       setCards(JSON.parse(storedCards));
     }
+    // Mark localStorage as loaded so migration can proceed
+    setLocalStorageLoaded(true);
   }, []);
 
-  // Session migration: Link guest session to authenticated user
+  // Session migration and data sync for authenticated users
   useEffect(() => {
-    const migrateSession = async () => {
-      if (user && sessionId && !authLoading) {
-        // Track migration per session (not per user) to handle multiple sessions
-        const migrationKey = `session_migrated_${sessionId}`;
-        const alreadyMigrated = localStorage.getItem(migrationKey);
-        
-        if (!alreadyMigrated) {
+    const migrateAndSyncSession = async () => {
+      // Wait for localStorage to load before proceeding
+      if (!localStorageLoaded || !user || !sessionId || authLoading) {
+        return;
+      }
+
+      // Skip if already synced for this user+session combination
+      const currentSyncKey = `${user.id}-${sessionId}`;
+      if (syncedSessionKey === currentSyncKey) {
+        return;
+      }
+      
+      let activeSessionId = sessionId;
+      const hasLocalData = messages.length > 0 || cards.length > 0;
+      let shouldLinkCurrentSession = true;
+
+        // FIRST: Discover existing sessions (before linking current one)
+        if (!hasLocalData) {
           try {
-            await apiRequest("POST", "/api/auth/link-session", { sessionId });
-            localStorage.setItem(migrationKey, "true");
-            console.log("Session migrated successfully for sessionId:", sessionId);
+            const response = await apiRequest("GET", "/api/auth/sessions");
+            const data = await response.json();
+            
+            if (data.success && data.sessions && data.sessions.length > 0) {
+              // User has existing sessions - adopt the most recent one
+              const mostRecentSession = data.sessions[0];
+              activeSessionId = mostRecentSession.id;
+              
+              // Update localStorage to use the adopted session
+              localStorage.setItem("career_agent_session_id", activeSessionId);
+              setSessionId(activeSessionId);
+              
+              // Don't link the current (empty) session since we're adopting an existing one
+              shouldLinkCurrentSession = false;
+              
+              console.log("Adopted existing session:", activeSessionId);
+            }
           } catch (error) {
-            console.error("Failed to migrate session:", error);
+            console.error("Failed to discover sessions:", error);
           }
         }
+
+        // SECOND: Link current session if needed (has data or no existing sessions found)
+        if (shouldLinkCurrentSession) {
+          const migrationKey = `session_migrated_${sessionId}`;
+          const alreadyMigrated = localStorage.getItem(migrationKey);
+          
+          if (!alreadyMigrated) {
+            try {
+              await apiRequest("POST", "/api/auth/link-session", { sessionId });
+              localStorage.setItem(migrationKey, "true");
+              console.log("Session linked successfully for sessionId:", sessionId);
+            } catch (error) {
+              console.error("Failed to link session:", error);
+            }
+          }
+        }
+
+      // THIRD: Fetch session data from backend (backend is always source of truth)
+      try {
+        const response = await apiRequest("GET", `/api/sessions/${activeSessionId}`);
+        const data = await response.json();
+        
+        if (data.success && data.messages && data.cards) {
+          // Backend data is source of truth - always use it
+          const backendMessages = data.messages.map((m: any) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+            timestamp: m.timestamp
+          }));
+          const backendCards = data.cards;
+
+          // Always sync with backend (backend is authoritative)
+          setMessages(backendMessages);
+          setCards(backendCards);
+          
+          localStorage.setItem("career_agent_messages", JSON.stringify(backendMessages));
+          localStorage.setItem("career_agent_cards", JSON.stringify(backendCards));
+        }
+      } catch (error) {
+        console.error("Failed to sync session data:", error);
       }
+
+      // Mark this session as synced to prevent re-running
+      setSyncedSessionKey(currentSyncKey);
     };
 
-    migrateSession();
-  }, [user, sessionId, authLoading]);
+    migrateAndSyncSession();
+  }, [user?.id, sessionId, authLoading, localStorageLoaded, syncedSessionKey]);
 
   useEffect(() => {
     if (messages.length > 0) {

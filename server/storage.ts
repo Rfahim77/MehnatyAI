@@ -24,7 +24,7 @@ import { randomUUID } from "crypto";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pkg from "pg";
 const { Pool } = pkg;
-import { eq, asc, isNull, and, gte, lt } from "drizzle-orm";
+import { eq, asc, desc, isNull, and, gte, lt } from "drizzle-orm";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle(pool);
@@ -41,6 +41,7 @@ export interface IStorage {
   saveResume(sessionId: string, name: string, resumeJson: any, targetRole?: string): Promise<void>;
   getSavedResumes(sessionId: string): Promise<any[]>;
   linkSessionToUser(sessionId: string, userId: string): Promise<void>;
+  getUserSessions(userId: string): Promise<Session[]>;
   
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
@@ -234,6 +235,16 @@ export class PostgresStorage implements IStorage {
       .update(sessions)
       .set({ userId })
       .where(eq(sessions.id, sessionId));
+  }
+
+  async getUserSessions(userId: string): Promise<Session[]> {
+    // Get all sessions linked to this user, ordered by last activity (most recent first)
+    const userSessions = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.userId, userId))
+      .orderBy(desc(sessions.lastActivity));
+    return userSessions;
   }
 
   // User operations (required for Replit Auth)

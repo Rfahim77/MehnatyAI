@@ -143,6 +143,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's sessions (for authenticated users to discover existing sessions)
+  app.get('/api/auth/sessions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const sessions = await storage.getUserSessions(userId);
+      
+      res.json({ 
+        success: true, 
+        sessions: sessions.map(s => ({
+          id: s.id,
+          createdAt: s.createdAt.getTime(),
+          lastActivity: s.lastActivity.getTime()
+        }))
+      });
+    } catch (error) {
+      console.error("Error fetching user sessions:", error);
+      res.status(500).json({ message: "Failed to fetch user sessions" });
+    }
+  });
+
+  // Fetch session data (messages and cards) for authenticated users or guests
+  app.get('/api/sessions/:sessionId', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+
+      if (!sessionId) {
+        return res.status(400).json({ message: "Session ID is required" });
+      }
+
+      // Fetch session data from database
+      const messages = await storage.getSessionMessages(sessionId);
+      const cards = await storage.getSessionCards(sessionId);
+
+      res.json({ 
+        success: true, 
+        messages: messages.map(m => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          timestamp: m.timestamp.getTime()
+        })),
+        cards 
+      });
+    } catch (error) {
+      console.error("Error fetching session data:", error);
+      res.status(500).json({ message: "Failed to fetch session data" });
+    }
+  });
+
   // Main chat endpoint (authentication disabled for now)
   app.post("/api/chat", async (req, res) => {
     try {

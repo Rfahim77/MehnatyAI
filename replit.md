@@ -31,13 +31,28 @@ The application features a bilingual Arabic/English interface with full RTL/LTR 
 ### Feature Specifications
 - **8 Career Pathways**: Resume Review, Career Chat, Future Planning, Tailor to Job, Interview Prep, Cover Letter, Skills Gap Analysis, and Build from Scratch.
 - **Enhanced Resume Review**: After analyzing uploaded resumes (strengths, weaknesses, suggestions), the AI proactively asks about career goals and future aspirations, providing personalized advice and 3-6 month action plans. The conversational approach mimics a professional career coach.
-- **Authentication**: Integrates Replit Auth for user signup/login (Google, GitHub, Apple, email/password) with user profiles stored in PostgreSQL.
-- **Accessibility**: All features are free and without usage limits.
+- **Optional Authentication**: Integrates Replit Auth for optional user signup/login (Google, GitHub, Apple, email/password). Users can access all features as guests or sign in for enhanced benefits:
+  - **Guest Mode**: Immediate access with temporary session storage (sessionId-based)
+  - **Authenticated Mode**: Permanent data storage, cross-device access, profile management, and enhanced personalization
+  - **Session Migration**: When guests sign in, their temporary session data is automatically linked to their user account
+- **User Profile Management**: Authenticated users can manage their profile including phone, LinkedIn URL, current role, years of experience, industry, and skills
+- **Accessibility**: All features are free and without usage limits for both guests and authenticated users.
 - **Modern Standard Arabic**: Ensures professional Modern Standard Arabic (MSA) is used throughout the application, avoiding regional dialects.
 
 ### System Design Choices
-- **Database Schema**: PostgreSQL tables (`sessions`, `messages`, `cards`, `savedResumes`) with proper foreign keys and cascade deletion for data integrity.
-- **API Endpoints**: A `POST /api/chat` endpoint for conversational interactions and various `POST /api/tools/*` endpoints for file processing, resume parsing, bullet rewriting, JD scoring, and export.
+- **Database Schema**: PostgreSQL tables (`sessions`, `messages`, `cards`, `savedResumes`, `users`, `subscriptions`, `usageTracking`) with proper foreign keys and cascade deletion for data integrity. Sessions table includes optional `userId` field for linking guest sessions to authenticated users.
+- **Hybrid Session Management**: 
+  - Guest users: sessionId stored in localStorage, temporary data
+  - Authenticated users: sessions linked to userId in database, permanent storage
+  - Session migration: `/api/auth/link-session` endpoint automatically links guest sessions to user accounts upon sign-in
+  - Frontend migration logic: tracks per-session migration status in localStorage to ensure each session is linked exactly once
+- **API Endpoints**: 
+  - `POST /api/chat` for conversational interactions
+  - `POST /api/tools/*` for file processing, resume parsing, bullet rewriting, JD scoring, and export
+  - `GET /api/auth/user` for fetching authenticated user data
+  - `GET /api/auth/profile` for fetching user profile
+  - `POST /api/auth/profile` for updating user profile
+  - `POST /api/auth/link-session` for migrating guest sessions to authenticated users
 - **WebSocket Endpoint**: `ws://localhost:5000/ws/collaborate` for real-time collaborative editing with room-based collaboration and auto-reconnection.
 
 ## External Dependencies

@@ -1,0 +1,129 @@
+🔥 Looks great, and you’re very close. Here’s a publish-ready UI/UX + copy review you can paste to your Replit builder. I focused on what’s in your screenshots and kept everything actionable.
+
+⸻
+
+Mehnaty AI — UI/UX & Copy Review (Final pre-publish)
+
+1) Brand & header
+	•	Fix brand in header: it still shows مهني in some places. It must be مهنتي | Mehnaty AI (Arabic first, then English).
+	•	Keep English wrapped as LTR: <bdi dir="ltr">Mehnaty AI</bdi> so it never flips in RTL.
+
+Drop-in (title line)
+
+<h1 style="margin:0;font-weight:800">
+  <span>مهنتي</span> <span class="divider">|</span>
+  <bdi dir="ltr">Mehnaty AI</bdi>
+</h1>
+
+
+⸻
+
+2) Hero copy (final wording)
+
+Headline:
+مدرّب مهني يعتمد على الذكاء الاصطناعي.
+
+Supporting line (polished punctuation):
+استخدم الذكاء الاصطناعي لتعزيز مسارك: نراجع سيرتك، نخصّصها للوظيفة، ونبني خطة مهارات ٣–٦ أشهر — بالعربية.
+
+(لاحظ المسافات حول الشرطة —؛ استخدم نصف مسافة)
+
+Tiny CSS helper (typography & RTL)
+
+.brand .divider{opacity:.6;margin:0 .35em}
+h1 bdi{unicode-bidi:plaintext}
+.emdash{padding:0 .25em} /* wrap the — in a <span class="emdash">—</span> if needed */
+
+
+⸻
+
+3) CTA & login
+	•	Primary CTA: “ابدأ الآن كضيف” ✅ (great for conversion).
+	•	Keep “تسجيل الدخول” as secondary, subdued.
+	•	On the benefits box under CTA, fix grammar & tighten:
+
+Before (screenshot):
+	•	احفظ نشطاتك الخاصه على جميع الاجهزه
+	•	وصول دائم لمحادثاتك المهنيه
+	•	تصدير المستندات إلى البريد الإلكتروني
+	•	لن تفقد تقدمك أبداً
+
+After (recommended):
+	•	احفظ تقدّمك ومحادثاتك على جميع الأجهزة.
+	•	وصول متزامن عبر الجوال والويب.
+	•	تصدير السيرة والملفات بصيغة DOCX/PDF أو إلى بريدك.
+	•	استئناف من حيث توقفت — في أي وقت.
+
+⸻
+
+4) Home options (labels + subtitles)
+
+Your structure is solid. Just tighten wording and unify style:
+	1.	مراجعة السيرة الذاتية
+احصل على تحليل شامل لسيرتك مع توصيات عملية للتحسين.
+	2.	استشارة مهنية
+ناقِش مسارك المهني واحصل على إرشاد مخصّص.
+	3.	التخطيط للمستقبل
+خطّة مهارات لمدة ٣–٦ أشهر مع معالم شهرية.
+	4.	مواءمة السيرة للوظيفة
+قارِن سيرتك بالوصف الوظيفي وحدّث النقاط فورًا.
+	5.	الاستعداد للمقابلة
+أسئلة محاكاة بالعربية مع ملاحظات فورية.
+	6.	خطاب التقديم
+إنشاء خطاب تقديم احترافي مخصّص.
+	7.	تحليل فجوات المهارات
+حدِّد المهارات المطلوبة وكيفية اكتسابها.
+	8.	البناء من الصفر
+أنشئ سيرة كاملة عبر الحوار خطوة بخطوة.
+
+ملاحظة: في بعض البطاقات يظهر “٦-٣ أشهر” — صحّحها إلى ٣–٦ أشهر واستخدم الشرطة الطويلة — بمسافتين رفيعتين حولها.
+
+⸻
+
+5) Logo in header
+
+The small green square still reads like a placeholder. Keep your letter-free mark (briefcase + circuits) inline SVG so it never breaks:
+
+<svg width="44" height="44" viewBox="0 0 64 64" aria-label="Mehnaty AI logo" role="img">
+  <rect x="0" y="0" width="64" height="64" rx="12" fill="#0F5132"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M24 20h16a4 4 0 0 1 4 4v2H20v-2a4 4 0 0 1 4-4z"/>
+    <rect x="12" y="26" width="40" height="26" rx="4"/>
+    <path d="M22 40v-6m10 16V34m10 6v-6"/>
+    <circle cx="22" cy="34" r="2.8" fill="#2CC295" stroke="none"/>
+    <circle cx="32" cy="30" r="2.8" fill="#2CC295" stroke="none"/>
+    <circle cx="42" cy="34" r="2.8" fill="#2CC295" stroke="none"/>
+    <path d="M22 34h10M42 34H32" />
+  </g>
+</svg>
+
+
+⸻
+
+6) Micro-UX polish (quick)
+	•	Add chips under hero to jump to top flows:
+مراجعة السيرة · تفصيل لوظيفة · تدريب مقابلة · خطة مهارات · إنشاء سيرة
+	•	Ensure tab order follows visual order; all buttons have visible focus.
+	•	Use Arabic comma (،) and consistent numerals (٣ ٤ ٥ …) across the app.
+
+⸻
+
+7) Content systemization (so copy stays consistent)
+	•	Create a /i18n/ar.json with the final strings above.
+	•	Add a formatDash(text) helper that enforces spaces around “—”.
+	•	Centralize durations as tokens: "plan_window": "٣–٦ أشهر".
+
+⸻
+
+8) Pre-publish checklist
+	•	Header title fixed: مهنتي | Mehnaty AI everywhere (header, <title>, manifest, OG tags).
+	•	Hero lines exactly as in §2 (with proper dash spacing).
+	•	Benefits list updated (grammar fixes).
+	•	Home card subtitles updated; ٣–٦ أشهر normalized.
+	•	Logo is the inline SVG above (crisp at 44px+).
+	•	Focus ring visible; keyboard nav verified on mobile/desktop.
+	•	Arabic punctuation & numerals consistent.
+
+⸻
+
+If you want, paste me any specific string from the app and I’ll return a corrected Arabic version on the spot. Also happy to give you a one-liner OG/Twitter description for sharing the launch.
