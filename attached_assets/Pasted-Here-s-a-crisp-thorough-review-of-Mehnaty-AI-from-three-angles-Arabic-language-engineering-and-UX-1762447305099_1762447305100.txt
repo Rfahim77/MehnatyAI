@@ -1,0 +1,163 @@
+Here’s a crisp, thorough review of Mehnaty AI from three angles—Arabic language, engineering, and UX/UI—grounded in what’s public in your repo and site right now.
+
+⸻
+
+What I verified (baseline)
+	•	The repo exists and exposes a TypeScript/Vite app with folders like client/, server/, public/, shared/, plus config files (vite.config.ts, tailwind.config.ts, drizzle.config.ts, design_guidelines.md, APPLE_STORE_GUIDE.md). Primary language shows TypeScript ~95%.  ￼
+	•	The repo README links to a Replit deployment.  ￼
+	•	https://www.mehnaty.io returns 502 Bad Gateway instead of redirecting to the apex.  ￼
+	•	A basic fetch of https://mehnaty.io/ returns no static markup (0 lines), which strongly suggests client-only rendering for the landing page. This hurts SEO and social previews.  ￼
+
+⸻
+
+1) Arabic-language review (expert pass)
+
+Tone & terminology
+	•	Use التطوير الوظيفي consistently (avoid mixing with “التطوير المهني” on public pages and cards).
+	•	Keep the bilingual brand as مهنتي | Mehnaty AI (Arabic first, English second). Where English appears in an RTL page, wrap it with <bdi dir="ltr">Mehnaty AI</bdi> to prevent direction issues.
+
+Punctuation & numerals (high-impact polish)
+	•	Em-dash with thin spaces: —
+	•	Arabic comma: ،
+	•	Use Arabic-Indic numerals for durations in Arabic UI, e.g., ٣–٦ أشهر (long dash, not “6-3”).
+
+Suggested hero copy (reads native, not literal)
+	•	Headline: مدرّب للتطوير الوظيفي يعتمد على الذكاء الاصطناعي.
+	•	Supporting: استخدم الذكاء الاصطناعي لتعزيز مسارك الوظيفي: نراجع سيرتك، نخصّصها للوظيفة، ونبني خطة مهارات ٣–٦ أشهر — بالعربية.
+
+Microcopy quick fixes (examples)
+	•	“احفظ نشاطاتك الخاصة…” → احفظ تقدّمك ومحادثاتك على جميع الأجهزة.
+	•	“وصول دائم لمحادثاتك…” → وصول متزامن عبر الجوال والكمبيوتر.
+	•	“لن تفقد تقدمك أبداً” → استأنِف من حيث توقّفت — في أي وقت.
+
+If you want, I can deliver a single ar.json with vetted strings so everything stays consistent.
+
+⸻
+
+2) Engineering review (security, reliability, performance)
+
+Top priorities (do these first)
+	1.	Prerender or SSR the landing (keep the rest SPA if you want). Today, crawlers/OG previews see an empty page; prerendering the hero + features + footer + meta will fix discoverability and improve first paint.  ￼
+	2.	Canonical redirect: www → mehnaty.io via 301 (DNS/proxy/app). Currently www yields 502; that’s user-hostile and confusing to bots.  ￼
+	3.	Harden the server (Express or equivalent):
+	•	helmet() with a strict CSP (limit script-src, connect-src to your LLM API), frame-ancestors: 'none', base-uri: 'self'.
+	•	Rate limiting on /api/* (e.g., 60 req/min/IP).
+	•	HSTS at the proxy; Referrer-Policy: strict-origin-when-cross-origin; gzip/brotli compression.
+
+app.disable('x-powered-by');
+app.use(helmet({
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      "default-src": ["'self'"],
+      "script-src": ["'self'"],
+      "style-src": ["'self'", "'unsafe-inline'"],
+      "img-src": ["'self'", "data:"],
+      "connect-src": ["'self'", process.env.LLM_API_BASE],
+      "frame-ancestors": ["'none'"],
+      "base-uri": ["'self'"]
+    }
+  }
+}));
+app.use(rateLimit({ windowMs: 60_000, max: 60 }));
+
+	4.	Upload/OCR pipeline hardening
+	•	Max size (≤5MB), allow only pdf/docx/png/jpg/webp, validate file magic numbers (don’t rely on extensions).
+	•	Load OCR only when needed, and run it in a worker thread so it doesn’t block the event loop.
+	5.	LLM call resilience & guardrails
+	•	Timeout (30s) + 2 retries, friendly Arabic errors.
+	•	Validate returned JSON with Zod (strict mode; reject unknown keys).
+	•	Prompt-injection wrapper: treat pasted CV/JD as data, ignore any instructions within it.
+	•	No invented facts policy: if numbers are missing, insert “(أضف رقمًا تقريبيًا)” instead of hallucinating metrics; never add degrees/certs not present.
+	6.	Observability
+	•	Sentry (FE/BE), pino structured logs with PII redaction, and /api/health returning {ok:true, uptime, version}.
+	•	Track key events: hero_cta_click, upload_success, parse_success, jd_tailor_done, export_docx, interview_complete.
+	7.	PWA/meta
+	•	manifest.json: name Mehnaty AI | مهنتي, dir:"rtl", lang:"ar", maskable icons, theme #0F5132.
+	•	Offline fallback page + <noscript> message.
+	•	In <head> for the prerendered landing: <title>, Arabic description, OG/Twitter cards, and <link rel="canonical" href="https://mehnaty.io/">.
+
+⸻
+
+3) UX & UI review (mobile-first, RTL-first)
+
+Speed to value
+	•	Add quick-start chips directly under the hero:
+Resume Review · Tailor to Job · Interview Prep · 3–6 Month Plan · Build from Scratch
+(Arabic labels: مراجعة السيرة · تفصيل لوظيفة · تدريب مقابلة · خطة ٣–٦ أشهر · إنشاء سيرة).
+	•	Each chip routes to a short, focused flow that ends with a pinned results card (with one-tap actions: Stronger verbs / Add numbers / Formal vs. friendly tone / Download DOCX/PDF).
+
+Empty/error states
+	•	Never leave a spinner. Use skeletons and helpful Arabic messages:
+	•	OCR fail → “تعذّر قراءة الملف. جرّب PDF أو صورة أوضح.”
+	•	Timeout → “انقطع الاتصال. حاول مرّة أخرى.”
+
+Accessibility (easy wins)
+	•	<html dir="rtl" lang="ar-SA"> site-wide.
+	•	Visible focus ring (e.g., outline:3px solid #5AE0B5).
+	•	Tab order matches visual order; Esc closes dialogs.
+	•	Verify text contrast ≥ 4.5:1 on sand/white backgrounds.
+
+Brand & iconography
+	•	Keep a letter-free inline SVG logo (e.g., briefcase + circuit nodes) so it scales and never 404s.
+	•	Use a consistent color token set: deep green for primary, mint accent, sand background.
+
+⸻
+
+4) Practical snippets you can paste
+
+Meta & OG (prerendered landing)
+
+<title>Mehnaty AI | مهنتي</title>
+<meta name="description" content="Mehnaty AI | مدرّب للتطوير الوظيفي يعتمد على الذكاء الاصطناعي: مراجعة السيرة، تخصيص للأدوار، خطة مهارات ٣–٦ أشهر، وتجهيز للمقابلات — بالعربية.">
+<meta property="og:title" content="Mehnaty AI | مهنتي">
+<meta property="og:description" content="تطويرك الوظيفي… بذكاءٍ اصطناعي.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/assets/social-card.png">
+<meta property="og:locale" content="ar_SA">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://mehnaty.io/">
+
+Manifest essentials
+
+{
+  "name": "Mehnaty AI | مهنتي",
+  "short_name": "Mehnaty",
+  "dir": "rtl",
+  "lang": "ar",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F3EDE4",
+  "theme_color": "#0F5132",
+  "icons": [
+    {"src": "/assets/pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose":"any maskable"},
+    {"src": "/assets/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose":"any maskable"}
+  ]
+}
+
+Playwright E2E (3 core journeys)
+
+test('JD tailoring to export', async ({ page }) => {
+  await page.goto('https://mehnaty.io');
+  await page.getByRole('button', { name: 'ابدأ الآن' }).click();
+  await page.getByText('تفصيل لوظيفة').click();
+  await page.getByPlaceholder('ألصق الوصف الوظيفي').fill('Customer Support JD ...');
+  await page.getByRole('button', { name: 'تحليل' }).click();
+  await expect(page.getByText('الفجوات')).toBeVisible();
+  await expect(page.getByText('نقاط محسّنة')).toBeVisible();
+  await page.getByRole('button', { name: 'تحميل DOCX' }).click();
+});
+
+
+⸻
+
+Final “do-now” checklist
+	•	Prerender/SSR landing so crawlers and share previews see content.  ￼
+	•	301 redirect www → mehnaty.io (fix current 502).  ￼
+	•	Normalize wording to التطوير الوظيفي, correct punctuation/numerals, and lock the brand as مهنتي | Mehnaty AI.
+	•	Add quick-start chips; pin result cards with one-tap actions; friendly Arabic error states.
+	•	Helmet + CSP + rate-limit; upload size + magic numbers; OCR in worker; LLM timeouts/retries + Zod + injection wrapper + “no invented facts”.
+	•	Manifest (RTL/lang + maskable icons), offline page, <noscript>.
+	•	Focus/contrast/keyboard checks; color tokens applied consistently.
+
+If you make the repo public to code view (or give me a read token), I’ll do a line-by-line review with diffs against exact files (server/index.ts, client/src/*, public/*, etc.).
