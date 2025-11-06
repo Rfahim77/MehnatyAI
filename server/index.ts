@@ -1,8 +1,45 @@
 import express, { type Request, Response, NextFunction } from "express";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import compression from "compression";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// Security: Disable x-powered-by header
+app.disable('x-powered-by');
+
+// Security: Helmet with CSP
+app.use(helmet({
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      "default-src": ["'self'"],
+      "script-src": ["'self'", "'unsafe-inline'"], // unsafe-inline needed for Vite in dev
+      "style-src": ["'self'", "'unsafe-inline'"], // unsafe-inline for Tailwind
+      "img-src": ["'self'", "data:", "blob:"],
+      "connect-src": ["'self'", "https://generativelanguage.googleapis.com"], // Gemini API
+      "font-src": ["'self'", "data:"],
+      "frame-ancestors": ["'none'"],
+      "base-uri": ["'self'"]
+    }
+  },
+  crossOriginEmbedderPolicy: false // Required for some features
+}));
+
+// Security: Rate limiting (60 requests per minute per IP)
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // 60 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests, please try again later." }
+});
+app.use('/api', limiter);
+
+// Performance: Compression
+app.use(compression());
 
 declare module 'http' {
   interface IncomingMessage {
