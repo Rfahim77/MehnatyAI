@@ -1,7 +1,7 @@
 {
-  "name": "Mehnaty AI | مهنتي",
+  "name": "مهنتي | Mehnaty AI",
   "short_name": "مهنتي",
-  "description": "مساعدك الذكي في التخطيط المهني والتوظيف - Your AI Career Assistant for the MENA region",
+  "description": "مدرّب مهني يعتمد على الذكاء الاصطناعي - AI Career Copilot for the MENA region",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",

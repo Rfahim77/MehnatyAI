@@ -2,12 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useRef } from "react";
+import type { User } from "@shared/schema";
 
 export function useAuth() {
   const { toast } = useToast();
   const hasShownError = useRef(false);
 
-  const { data: user, isLoading, error } = useQuery({
+  const { data: user, isLoading, error } = useQuery<User>({
     queryKey: ["/api/auth/user"],
     retry: false,
   });
