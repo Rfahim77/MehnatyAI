@@ -309,20 +309,44 @@ export const authSessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// Users table (required for Replit Auth)
+// Users table (supports both Replit Auth and OTP)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
+  phone: varchar("phone").unique(), // Phone number for OTP login
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   stripeCustomerId: varchar("stripe_customer_id"),
+  // Professional profile fields
+  linkedinUrl: varchar("linkedin_url"),
+  currentRole: varchar("current_role"),
+  yearsExperience: integer("years_experience"),
+  industry: varchar("industry"),
+  skills: text("skills").array(), // Array of skills
+  profileCompleted: boolean("profile_completed").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+// OTP verification codes table
+export const otpCodes = pgTable("otp_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  phone: varchar("phone").notNull(),
+  code: varchar("code", { length: 6 }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  verified: boolean("verified").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_otp_phone").on(table.phone),
+  index("idx_otp_expires").on(table.expiresAt)
+]);
+
+export type InsertOtpCode = typeof otpCodes.$inferInsert;
+export type SelectOtpCode = typeof otpCodes.$inferSelect;
 
 // Subscriptions table
 export const subscriptions = pgTable("subscriptions", {
