@@ -19,7 +19,7 @@ app.use(helmet({
       "script-src": ["'self'", "'unsafe-inline'"], // unsafe-inline needed for Vite in dev
       "style-src": ["'self'", "'unsafe-inline'"], // unsafe-inline for Tailwind
       "img-src": ["'self'", "data:", "blob:"],
-      "connect-src": ["'self'", "https://generativelanguage.googleapis.com"], // Gemini API
+      "connect-src": ["'self'", "ws:", "wss:", "https://generativelanguage.googleapis.com"], // WebSocket + Gemini API
       "font-src": ["'self'", "data:"],
       "frame-ancestors": ["'none'"],
       "base-uri": ["'self'"]

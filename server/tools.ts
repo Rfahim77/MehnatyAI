@@ -25,9 +25,8 @@ export async function extractText(fileBuffer: Buffer, mimeType: string): Promise
     if (mimeType === "application/pdf") {
       try {
         // Lazy-load pdf-parse only when needed
-        const { PDFParse } = await import("pdf-parse");
-        const parser = new PDFParse({ data: fileBuffer });
-        const result = await parser.getText();
+        const pdfParse = (await import("pdf-parse")).default;
+        const result = await pdfParse(fileBuffer);
         
         if (!result.text || result.text.trim().length === 0) {
           throw new Error("الملف لا يحتوي على نص قابل للاستخراج");
