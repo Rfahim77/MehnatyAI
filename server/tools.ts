@@ -7,7 +7,7 @@
 
 import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
-import { callLLMWithRetry } from "./llmClient";
+import { callLLMWithRetry, type LLMMessage } from "./llmClient";
 import {
   getParseResumePrompt,
   getRewriteBulletsPrompt,
@@ -17,6 +17,72 @@ import {
 } from "./prompts";
 import { ResumeJsonSchema, validateResume, type ResumeJson } from "@shared/schema";
 
+// AI-powered text extraction - sends file directly to Gemini for analysis
+export async function extractTextWithAI(fileBuffer: Buffer, mimeType: string): Promise<{
+  text: string;
+  meta: { fileType: string; language?: string };
+}> {
+  try {
+    // Map MIME types to file type descriptions
+    const fileTypeMap: Record<string, string> = {
+      "application/pdf": "PDF",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "DOCX",
+      "image/png": "PNG image",
+      "image/jpeg": "JPEG image",
+      "image/webp": "WEBP image"
+    };
+
+    const fileType = fileTypeMap[mimeType] || "document";
+
+    // Send file directly to Gemini for text extraction
+    const messages: LLMMessage[] = [
+      {
+        role: "system",
+        content: `أنت مساعد ذكي متخصص في استخراج النص من الملفات. مهمتك استخراج كل النص المرئي من الملف المرفق بدقة تامة.
+
+قواعد الاستخراج:
+١. استخرج كل النص بالضبط كما هو مكتوب في الملف
+٢. حافظ على التنسيق والفقرات والقوائم
+٣. إذا كان الملف يحتوي على جداول، استخرج محتواها بشكل منظم
+٤. إذا كان الملف صورة، استخدم OCR لاستخراج النص
+٥. لا تضف أي تعليقات أو ملاحظات، فقط النص المستخرج
+
+يجب أن يكون الرد: النص المستخرج من الملف فقط، بدون أي إضافات.`
+      },
+      {
+        role: "user",
+        content: `استخرج كل النص من ملف ${fileType} المرفق:`,
+        fileData: {
+          mimeType,
+          data: fileBuffer
+        }
+      }
+    ];
+
+    const extractedText = await callLLMWithRetry(messages, {
+      temperature: 0.1, // Low temperature for accurate extraction
+      maxTokens: 16384, // Allow for long documents
+      applyWindowing: false // Don't window for file extraction
+    });
+
+    if (!extractedText || extractedText.trim().length === 0) {
+      throw new Error("الملف لا يحتوي على نص قابل للاستخراج");
+    }
+
+    return {
+      text: extractedText.trim(),
+      meta: {
+        fileType: fileType.toLowerCase(),
+        language: "ar" // Assume Arabic/mixed for now
+      }
+    };
+  } catch (error: any) {
+    console.error("AI text extraction error:", error);
+    throw new Error("فشل استخراج النص من الملف. يُرجى التأكد من صحة الملف والمحاولة مرة أخرى");
+  }
+}
+
+// Legacy text extraction function (deprecated - kept for backwards compatibility)
 export async function extractText(fileBuffer: Buffer, mimeType: string): Promise<{
   text: string;
   meta: { pages?: number; fileType: string; language?: string };

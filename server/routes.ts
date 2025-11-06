@@ -692,7 +692,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const result = await extractText(req.file.buffer, req.file.mimetype);
+      // Use AI-powered text extraction (sends file directly to Gemini)
+      const { extractTextWithAI } = await import("./tools");
+      const result = await extractTextWithAI(req.file.buffer, req.file.mimetype);
 
       const response: ExtractTextResponse = {
         text: result.text,

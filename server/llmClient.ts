@@ -14,6 +14,10 @@ const ai = new GoogleGenAI({
 export interface LLMMessage {
   role: "system" | "user" | "assistant";
   content: string;
+  fileData?: {
+    mimeType: string;
+    data: Buffer;
+  };
 }
 
 // Helper function to check if error is rate limit or quota violation
@@ -37,7 +41,7 @@ function convertMessagesToGeminiFormat(messages: LLMMessage[]) {
   // We need to merge system messages and handle the conversation properly
   
   let systemPrompt = "";
-  const conversationParts: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
+  const conversationParts: Array<{ role: "user" | "model"; parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> }> = [];
   
   for (const msg of messages) {
     if (msg.role === "system") {
@@ -46,7 +50,10 @@ function convertMessagesToGeminiFormat(messages: LLMMessage[]) {
         // If last was user, we have a problem - can't have two user messages in a row
         // Prepend to the last user message instead
         const lastUserMsg = conversationParts[conversationParts.length - 1];
-        lastUserMsg.parts[0].text = msg.content + "\n\n" + lastUserMsg.parts[0].text;
+        const firstPart = lastUserMsg.parts[0];
+        if (firstPart.text) {
+          firstPart.text = msg.content + "\n\n" + firstPart.text;
+        }
       } else {
         // Accumulate for next user message
         systemPrompt += (systemPrompt ? "\n\n" : "") + msg.content;
@@ -54,9 +61,25 @@ function convertMessagesToGeminiFormat(messages: LLMMessage[]) {
     } else if (msg.role === "user") {
       const userText = (systemPrompt ? systemPrompt + "\n\n" : "") + msg.content;
       systemPrompt = ""; // Reset after using
+      
+      const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
+      
+      // Add file data if present (for resume uploads, images, etc.)
+      if (msg.fileData) {
+        parts.push({
+          inlineData: {
+            mimeType: msg.fileData.mimeType,
+            data: msg.fileData.data.toString('base64')
+          }
+        });
+      }
+      
+      // Add text content
+      parts.push({ text: userText });
+      
       conversationParts.push({
         role: "user",
-        parts: [{ text: userText }]
+        parts
       });
     } else if (msg.role === "assistant") {
       conversationParts.push({
