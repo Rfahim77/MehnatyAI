@@ -86,16 +86,16 @@ export async function setupAuth(app: Express) {
   // Keep track of registered strategies
   const registeredStrategies = new Set<string>();
 
-  // Helper function to ensure strategy exists for a domain
-  const ensureStrategy = (domain: string) => {
-    const strategyName = `replitauth:${domain}`;
+  // Helper function to ensure strategy exists for a host (includes port if needed)
+  const ensureStrategy = (host: string) => {
+    const strategyName = `replitauth:${host}`;
     if (!registeredStrategies.has(strategyName)) {
       const strategy = new Strategy(
         {
           name: strategyName,
           config,
           scope: "openid email profile offline_access",
-          callbackURL: `https://${domain}/api/callback`,
+          callbackURL: `https://${host}/api/callback`,
         },
         verify,
       );
@@ -108,27 +108,30 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    ensureStrategy(req.hostname);
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    const host = req.get('host') || req.hostname;
+    ensureStrategy(host);
+    passport.authenticate(`replitauth:${host}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    ensureStrategy(req.hostname);
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    const host = req.get('host') || req.hostname;
+    ensureStrategy(host);
+    passport.authenticate(`replitauth:${host}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, next);
   });
 
   app.get("/api/logout", (req, res) => {
+    const host = req.get('host') || req.hostname;
     req.logout(() => {
       res.redirect(
         client.buildEndSessionUrl(config, {
           client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
+          post_logout_redirect_uri: `${req.protocol}://${host}`,
         }).href
       );
     });

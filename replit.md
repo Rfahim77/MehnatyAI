@@ -1,6 +1,7 @@
 # Mehnaty AI | مهنتي
 
 ## Recent Changes
+- **Auth Callback Fix (Nov 7, 2025)**: Fixed Replit Auth callback URL to include port number (`:5000`) in development. Changed from `req.hostname` to `req.get('host')` to properly construct callback URLs like `https://[dev-domain]:5000/api/callback`. This resolves the "couldn't reach this app" error during OAuth redirect.
 - **Auth Implementation Reset (Nov 6, 2025)**: Completely reset Replit Auth from blueprint - deleted old implementation and re-added fresh from `blueprint:javascript_log_in_with_replit`. Cookie security properly configured for development environment (`secure: false` in dev, `true` in production). All auth endpoints tested and working correctly.
 
 ## Overview
